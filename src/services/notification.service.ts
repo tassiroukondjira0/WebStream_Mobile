@@ -142,12 +142,12 @@ export async function getUnreadCount(): Promise<number> {
 
 /**
  * Envoie un token d'appareil au serveur pour qu'un admin puisse cibler cet appareil.
- * L'API doit exposer POST /api/notifications/register-device.
+ * L'API doit exposer POST /api/push-token.
  */
 export async function registerDeviceToken(token: string): Promise<void> {
   try {
     const baseUrl = getBaseApiUrl();
-    await fetch(`${baseUrl}/api/notifications/register-device`, {
+    await fetch(`${baseUrl}/api/push-token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token }),
