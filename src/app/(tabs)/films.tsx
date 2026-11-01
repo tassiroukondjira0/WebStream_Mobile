@@ -8,7 +8,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Api } from '@/services/api';
 import { MediaItem } from '@/types/media';
 import { MediaCard } from '@/components/MediaCard';
@@ -19,8 +18,6 @@ const HORIZONTAL_PADDING = 16;
 const FOOTER_HEIGHT = 100;
 
 export default function FilmsScreen() {
-  const router = useRouter();
-
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [items, setItems] = useState<MediaItem[]>([]);
