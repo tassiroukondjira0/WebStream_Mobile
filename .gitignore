@@ -44,3 +44,7 @@ example
 
 # local build log
 /build-install.log
+
+# signing credentials
+credentials.json
+*.keystore
