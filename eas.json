@@ -7,8 +7,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "credentialsSource": "local"
+        "buildType": "apk"
       },
       "ios": {
         "resourceClass": "m-medium"
@@ -17,8 +16,7 @@
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "credentialsSource": "local"
+        "buildType": "apk"
       },
       "ios": {
         "resourceClass": "m-medium"
@@ -26,8 +24,7 @@
     },
     "production": {
       "android": {
-        "buildType": "apk",
-        "credentialsSource": "local"
+        "buildType": "apk"
       },
       "ios": {
         "resourceClass": "m-medium"
