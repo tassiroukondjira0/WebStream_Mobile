@@ -69,8 +69,7 @@ export default function ExploreScreen() {
     else if (provider === 'partner') providerNormalized = 'FRENCHSTREAM';
     else if (provider === 'frenchmanga') providerNormalized = 'FRENCHMANGA';
 
-    // Déterminer le type depuis l'href — l'API renvoie toujours type: "Catalogue",
-    // le vrai type est dans le premier segment de l'URL (schéma identique à Web_Stream).
+    // Déterminer le type depuis l'href (schéma identique à Web_Stream).
     const mediaType =
       typePlural === 'series' ? 'SERIES' :
       typePlural === 'animes' ? 'ANIME' :
