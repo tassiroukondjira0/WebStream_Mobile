@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Api } from '@/services/api';
 import { MediaItem } from '@/types/media';
 import { MediaCard } from '@/components/MediaCard';
@@ -21,6 +22,7 @@ const { width } = Dimensions.get('window');
 const columnWidth = (width - HORIZONTAL_PADDING * 2 - ITEM_SPACING) / NUM_COLUMNS;
 
 export default function SeriesScreen() {
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -114,7 +116,7 @@ export default function SeriesScreen() {
       renderItem={renderItem}
       keyExtractor={(item) => item.id || item.externalId || Math.random().toString()}
       numColumns={NUM_COLUMNS}
-      contentContainerStyle={styles.listContent}
+      contentContainerStyle={[styles.listContent, { paddingTop: HORIZONTAL_PADDING + insets.top }]}
       columnWrapperStyle={styles.columnWrapper}
       showsVerticalScrollIndicator={false}
       refreshControl={
@@ -141,7 +143,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   listContent: {
-    padding: HORIZONTAL_PADDING,
+    paddingHorizontal: HORIZONTAL_PADDING,
     paddingBottom: FOOTER_HEIGHT,
   },
   columnWrapper: {

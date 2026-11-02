@@ -1,8 +1,10 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Home, Film, Tv, User } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Home, Film, Tv, User, MonitorPlay } from 'lucide-react-native';
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
@@ -13,9 +15,9 @@ export default function TabsLayout() {
           backgroundColor: '#09090b',
           borderTopColor: '#27272a',
           borderTopWidth: 1,
-          paddingBottom: 8,
+          paddingBottom: insets.bottom,
           paddingTop: 8,
-          height: 60,
+          height: 60 + insets.bottom,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -52,6 +54,16 @@ export default function TabsLayout() {
           tabBarLabel: 'Séries',
           tabBarIcon: ({ color, size }) => (
             <Tv color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="animes"
+        options={{
+          title: 'Animés',
+          tabBarLabel: 'Animés',
+          tabBarIcon: ({ color, size }) => (
+            <MonitorPlay color={color} size={size} />
           ),
         }}
       />

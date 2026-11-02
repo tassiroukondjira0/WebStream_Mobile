@@ -3,6 +3,7 @@ import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '@/context/AuthContext';
 import { NotificationProvider } from '@/context/NotificationContext';
 
@@ -18,8 +19,9 @@ export default function RootLayout() {
     <AuthProvider>
       <NotificationProvider>
         <ThemeProvider value={DarkTheme}>
-          <StatusBar style="light" />
-          <Stack
+          <SafeAreaProvider>
+            <StatusBar style="light" />
+            <Stack
             screenOptions={{
               headerShown: false,
               contentStyle: { backgroundColor: '#09090b' },
@@ -69,6 +71,7 @@ export default function RootLayout() {
             />
             <Stack.Screen name="download" />
           </Stack>
+          </SafeAreaProvider>
         </ThemeProvider>
       </NotificationProvider>
     </AuthProvider>

@@ -8,15 +8,19 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Play, Search } from 'lucide-react-native';
+import { Bell, Play, Search } from 'lucide-react-native';
 import { Api } from '@/services/api';
 import { MediaItem } from '@/types/media';
 import { MediaRow } from '@/components/MediaRow';
+import { useNotifications } from '@/context/NotificationContext';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { unreadCount } = useNotifications();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -107,6 +111,10 @@ export default function HomeScreen() {
     router.push('/explore');
   };
 
+  const handleNotifications = () => {
+    router.push('/notifications' as any);
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -124,11 +132,17 @@ export default function HomeScreen() {
       }
     >
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Text style={styles.headerTitle}>CinéMax</Text>
-        <TouchableOpacity onPress={handleSearch} activeOpacity={0.7}>
-          <Search color="#ffffff" size={24} />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={handleNotifications} activeOpacity={0.7} style={styles.headerBtn}>
+            <Bell color="#ffffff" size={24} />
+            {unreadCount > 0 && <View style={styles.badge}><Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text></View>}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleSearch} activeOpacity={0.7} style={styles.headerBtn}>
+            <Search color="#ffffff" size={24} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Featured */}
@@ -195,12 +209,37 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 12,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  headerBtn: {
+    padding: 4,
   },
   headerTitle: {
     color: '#ffffff',
     fontSize: 24,
     fontWeight: 'bold',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#e50914',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '700',
   },
   featuredContainer: {
     marginHorizontal: 16,
