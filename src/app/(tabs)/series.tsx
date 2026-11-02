@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   ActivityIndicator,
-  Dimensions,
-  FlatList,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -11,45 +10,66 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Api } from '@/services/api';
 import { MediaItem } from '@/types/media';
-import { MediaCard } from '@/components/MediaCard';
+import { MediaRow } from '@/components/MediaRow';
+import { colors } from '@/theme/theme';
 
-const NUM_COLUMNS = 2;
-const ITEM_SPACING = 12;
-const HORIZONTAL_PADDING = 16;
-const FOOTER_HEIGHT = 100;
+const ITEMS_PER_CATEGORY = 12;
 
-const { width } = Dimensions.get('window');
-const columnWidth = (width - HORIZONTAL_PADDING * 2 - ITEM_SPACING) / NUM_COLUMNS;
+const SERIES_CATEGORIES = [
+  { key: 'trending', label: '🔥 Tendances' },
+  { key: 'new', label: '🆕 Nouveautés' },
+  { key: 'drama', label: '🎭 Drame' },
+  { key: 'comedy', label: '😂 Comédie' },
+  { key: 'scifi', label: '🚀 Science-Fiction' },
+  { key: 'thriller', label: '🔪 Thriller' },
+  { key: 'fantasy', label: '🧙 Fantasy' },
+  { key: 'crime', label: '🔍 Crime' },
+  { key: 'romance', label: '❤️ Romance' },
+  { key: 'documentary', label: '📽️ Documentaire' },
+  { key: 'family', label: '👨‍👩‍👧‍👦 Famille' },
+  { key: 'classic', label: '🏆 Classiques' },
+];
 
 export default function SeriesScreen() {
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [items, setItems] = useState<MediaItem[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [categories, setCategories] = useState<Record<string, MediaItem[]>>({});
   const initialLoaded = useRef(false);
 
-  const LIMIT = 20;
+  const loadSeries = useCallback(async () => {
+    const results: MediaItem[] = [];
+    for (let page = 1; page <= 3; page++) {
+      const res = await Api.getCatalog('SERIES', page, 20);
+      results.push(...res.items);
+      if (page >= res.pagination?.totalPages) break;
+    }
+    return results;
+  }, []);
 
-  const loadSeries = useCallback(async (pageNum: number) => {
-    const res = await Api.getCatalog('SERIES', pageNum, LIMIT);
-    return res;
+  const distributeItems = useCallback((items: MediaItem[]) => {
+    const cats: Record<string, MediaItem[]> = {};
+    const categoryKeys = SERIES_CATEGORIES.map(c => c.key);
+
+    categoryKeys.forEach(key => {
+      const startIdx = categoryKeys.indexOf(key) * ITEMS_PER_CATEGORY;
+      cats[key] = items.slice(startIdx, startIdx + ITEMS_PER_CATEGORY);
+    });
+
+    setCategories(cats);
   }, []);
 
   const fetchInitial = useCallback(async () => {
     try {
-      const res = await loadSeries(1);
-      setItems(res.items);
-      setHasMore((res.pagination?.totalPages ?? 1) > 1);
+      const items = await loadSeries();
+      distributeItems(items);
     } catch (err) {
       console.error('Erreur chargement séries :', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [loadSeries]);
+  }, [loadSeries, distributeItems]);
 
   useEffect(() => {
     if (initialLoaded.current) return;
@@ -59,109 +79,77 @@ export default function SeriesScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setPage(1);
-    setHasMore(true);
+    initialLoaded.current = false;
     await fetchInitial();
   }, [fetchInitial]);
-
-  const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMore) return;
-    setLoadingMore(true);
-    try {
-      const nextPage = page + 1;
-      const res = await loadSeries(nextPage);
-      setPage(nextPage);
-      setItems((prev) => [...prev, ...res.items]);
-      setHasMore((res.pagination?.totalPages ?? 1) > nextPage);
-    } catch (err) {
-      console.error('Erreur chargement plus de séries :', err);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [page, loadingMore, hasMore, loadSeries]);
-
-  const renderItem = ({ item }: { item: MediaItem }) => (
-    <View style={{ width: columnWidth }}>
-      <MediaCard media={item} width={columnWidth} />
-    </View>
-  );
-
-  const renderFooter = () => {
-    if (!loadingMore) return null;
-    return (
-      <View style={styles.footer}>
-        <ActivityIndicator size="small" color="#e50914" />
-      </View>
-    );
-  };
-
-  const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>Aucune série disponible pour le moment.</Text>
-    </View>
-  );
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#e50914" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Chargement des séries...</Text>
       </View>
     );
   }
 
   return (
-    <FlatList
-      data={items}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id || item.externalId || Math.random().toString()}
-      numColumns={NUM_COLUMNS}
-      contentContainerStyle={[styles.listContent, { paddingTop: HORIZONTAL_PADDING + insets.top }]}
-      columnWrapperStyle={styles.columnWrapper}
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 16 }]}
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#e50914" />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }
-      onEndReached={loadMore}
-      onEndReachedThreshold={0.5}
-      ListEmptyComponent={renderEmpty}
-      ListFooterComponent={renderFooter}
-    />
+    >
+      <Text style={styles.pageTitle}>Catalogue des Séries</Text>
+      <Text style={styles.pageSubtitle}>Découvrez les meilleures séries en streaming.</Text>
+
+      {SERIES_CATEGORIES.map((cat) => (
+        <MediaRow
+          key={cat.key}
+          title={cat.label}
+          items={categories[cat.key] || []}
+        />
+      ))}
+
+      <View style={styles.bottomSpacer} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#09090b',
+    backgroundColor: colors.background,
   },
   loadingText: {
-    color: '#a1a1aa',
+    color: colors.textSecondary,
     fontSize: 16,
     marginTop: 12,
   },
-  listContent: {
-    paddingHorizontal: HORIZONTAL_PADDING,
-    paddingBottom: FOOTER_HEIGHT,
+  pageTitle: {
+    color: colors.textPrimary,
+    fontSize: 24,
+    fontWeight: '800',
+    paddingHorizontal: 16,
+    marginBottom: 4,
   },
-  columnWrapper: {
-    justifyContent: 'space-between',
+  pageSubtitle: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    paddingHorizontal: 16,
+    marginBottom: 8,
   },
-  footer: {
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyText: {
-    color: '#71717a',
-    fontSize: 16,
+  bottomSpacer: {
+    height: 20,
   },
 });

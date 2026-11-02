@@ -6,6 +6,7 @@ import { Heart, Clock } from 'lucide-react-native';
 import { MediaItem } from '@/types/media';
 import { Api, toMediaSlug } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import { colors } from '@/theme/theme';
 
 interface MediaCardProps {
   media: MediaItem;
@@ -91,9 +92,9 @@ export function MediaCard({ media, width = 130 }: MediaCardProps) {
               onPress={handleFavorite}
               activeOpacity={0.7}>
               <Heart
-                color={isFavorite ? '#e50914' : 'rgba(255,255,255,0.85)'}
+                color={isFavorite ? colors.primary : 'rgba(255,255,255,0.85)'}
                 size={14}
-                fill={isFavorite ? '#e50914' : 'none'}
+                fill={isFavorite ? colors.primary : 'none'}
               />
             </TouchableOpacity>
             <TouchableOpacity
@@ -101,9 +102,9 @@ export function MediaCard({ media, width = 130 }: MediaCardProps) {
               onPress={handleWish}
               activeOpacity={0.7}>
               <Clock
-                color={isWish ? '#e50914' : 'rgba(255,255,255,0.85)'}
+                color={isWish ? colors.primary : 'rgba(255,255,255,0.85)'}
                 size={14}
-                fill={isWish ? '#e50914' : 'none'}
+                fill={isWish ? colors.primary : 'none'}
               />
             </TouchableOpacity>
           </View>
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#1f1f23',
+    backgroundColor: colors.card,
     position: 'relative',
   },
   poster: {
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: '#f4f4f5',
+    color: colors.textPrimary,
     fontSize: 13,
     fontWeight: '600',
     marginTop: 6,

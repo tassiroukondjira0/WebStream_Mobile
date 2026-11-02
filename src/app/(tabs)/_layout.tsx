@@ -2,6 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, Film, Tv, User, MonitorPlay } from 'lucide-react-native';
+import { colors } from '@/theme/theme';
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
@@ -9,11 +10,11 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#e50914',
-        tabBarInactiveTintColor: '#71717a',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
-          backgroundColor: '#09090b',
-          borderTopColor: '#27272a',
+          backgroundColor: colors.background,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
           paddingBottom: insets.bottom,
           paddingTop: 8,

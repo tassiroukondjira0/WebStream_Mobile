@@ -16,6 +16,7 @@ import { Api } from '@/services/api';
 import { MediaItem } from '@/types/media';
 import { MediaRow } from '@/components/MediaRow';
 import { useNotifications } from '@/context/NotificationContext';
+import { colors } from '@/theme/theme';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -118,7 +119,7 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#e50914" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Chargement du catalogue...</Text>
       </View>
     );
@@ -128,7 +129,7 @@ export default function HomeScreen() {
     <ScrollView
       style={styles.container}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#e50914" />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }
     >
       {/* Header */}
@@ -136,11 +137,11 @@ export default function HomeScreen() {
         <Text style={styles.headerTitle}>CinéMax</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={handleNotifications} activeOpacity={0.7} style={styles.headerBtn}>
-            <Bell color="#ffffff" size={24} />
+            <Bell color={colors.textPrimary} size={24} />
             {unreadCount > 0 && <View style={styles.badge}><Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text></View>}
           </TouchableOpacity>
           <TouchableOpacity onPress={handleSearch} activeOpacity={0.7} style={styles.headerBtn}>
-            <Search color="#ffffff" size={24} />
+            <Search color={colors.textPrimary} size={24} />
           </TouchableOpacity>
         </View>
       </View>
@@ -191,16 +192,16 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#09090b',
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#09090b',
+    backgroundColor: colors.background,
   },
   loadingText: {
-    color: '#a1a1aa',
+    color: colors.textSecondary,
     fontSize: 16,
     marginTop: 12,
   },
@@ -220,7 +221,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
-    color: '#ffffff',
+    color: colors.textPrimary,
     fontSize: 24,
     fontWeight: 'bold',
   },
@@ -228,7 +229,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: '#e50914',
+    backgroundColor: colors.primary,
     borderRadius: 10,
     minWidth: 18,
     height: 18,
@@ -237,7 +238,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   badgeText: {
-    color: '#ffffff',
+    color: colors.primaryForeground,
     fontSize: 10,
     fontWeight: '700',
   },
@@ -261,18 +262,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   featuredTitle: {
-    color: '#ffffff',
+    color: colors.textPrimary,
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   featuredYear: {
-    color: '#a1a1aa',
+    color: colors.textSecondary,
     fontSize: 14,
     marginBottom: 6,
   },
   featuredOverview: {
-    color: '#d4d4d8',
+    color: colors.foreground,
     fontSize: 13,
     marginBottom: 10,
   },
@@ -280,14 +281,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#e50914',
+    backgroundColor: colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
     alignSelf: 'flex-start',
   },
   playButtonText: {
-    color: '#ffffff',
+    color: colors.primaryForeground,
     fontSize: 14,
     fontWeight: '600',
   },

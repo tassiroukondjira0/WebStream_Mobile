@@ -2,6 +2,7 @@ import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { MediaItem } from '@/types/media';
 import { MediaCard } from './MediaCard';
+import { colors } from '@/theme/theme';
 
 interface MediaRowProps {
   title: string;
@@ -32,7 +33,7 @@ const styles = StyleSheet.create({
     marginVertical: 14,
   },
   sectionTitle: {
-    color: '#ffffff',
+    color: colors.textPrimary,
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 10,

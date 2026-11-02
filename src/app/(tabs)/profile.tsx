@@ -20,9 +20,11 @@ import {
   Lock,
   Trash2,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
+import { colors } from '@/theme/theme';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -94,7 +96,7 @@ export default function ProfileScreen() {
             {/* User info card */}
             <View style={styles.profileCard}>
               <View style={styles.avatarCircleSmall}>
-                <UserIcon color="#e50914" size={28} />
+                <UserIcon color={colors.primary} size={28} />
               </View>
               <View style={styles.profileInfo}>
                 <Text style={styles.userName}>{user?.name || 'Utilisateur'}</Text>
@@ -115,20 +117,29 @@ export default function ProfileScreen() {
 
               <TouchableOpacity
                 style={styles.menuItem}
+                onPress={() => router.push('/premium' as any)}
+                activeOpacity={0.7}>
+                <Sparkles color={colors.warning} size={20} />
+                <Text style={styles.menuItemText}>Pass Premium</Text>
+                <ChevronRight color={colors.textTertiary} size={16} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuItem}
                 onPress={() => router.push('/favorites' as any)}
                 activeOpacity={0.7}>
-                <Heart color="#e50914" size={20} />
+                <Heart color={colors.primary} size={20} />
                 <Text style={styles.menuItemText}>Favoris</Text>
-                <ChevronRight color="#52525b" size={16} />
+                <ChevronRight color={colors.textTertiary} size={16} />
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.menuItem}
                 onPress={() => router.push('/wishlist' as any)}
                 activeOpacity={0.7}>
-                <Clock color="#e50914" size={20} />
+                <Clock color={colors.primary} size={20} />
                 <Text style={styles.menuItemText}>Souhaits</Text>
-                <ChevronRight color="#52525b" size={16} />
+                <ChevronRight color={colors.textTertiary} size={16} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -136,7 +147,7 @@ export default function ProfileScreen() {
                 onPress={() => router.push('/notifications' as any)}
                 activeOpacity={0.7}>
                 <View style={styles.menuIconWrapper}>
-                  <Bell color="#e50914" size={20} />
+                  <Bell color={colors.primary} size={20} />
                   {unreadCount > 0 ? (
                     <View style={styles.badge}>
                       <Text style={styles.badgeText}>{unreadCount}</Text>
@@ -144,16 +155,16 @@ export default function ProfileScreen() {
                   ) : null}
                 </View>
                 <Text style={styles.menuItemText}>Notifications</Text>
-                <ChevronRight color="#52525b" size={16} />
+                <ChevronRight color={colors.textTertiary} size={16} />
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.menuItem}
                 onPress={() => router.push('/change-password' as any)}
                 activeOpacity={0.7}>
-                <Lock color="#a1a1aa" size={20} />
+                <Lock color={colors.textSecondary} size={20} />
                 <Text style={styles.menuItemText}>Modifier mon mot de passe</Text>
-                <ChevronRight color="#52525b" size={16} />
+                <ChevronRight color={colors.textTertiary} size={16} />
               </TouchableOpacity>
             </View>
 
@@ -165,9 +176,9 @@ export default function ProfileScreen() {
                 style={styles.menuItem}
                 onPress={handleClearCache}
                 activeOpacity={0.7}>
-                <Trash2 color="#a1a1aa" size={20} />
+                <Trash2 color={colors.textSecondary} size={20} />
                 <Text style={styles.menuItemText}>Vider le cache</Text>
-                <ChevronRight color="#52525b" size={16} />
+                <ChevronRight color={colors.textTertiary} size={16} />
               </TouchableOpacity>
             </View>
           </>
@@ -180,7 +191,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#09090b',
+    backgroundColor: colors.background,
   },
   scroll: {
     flex: 1,
@@ -190,10 +201,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#18181b',
+    borderBottomColor: colors.border,
   },
   headerTitle: {
-    color: '#ffffff',
+    color: colors.textPrimary,
     fontSize: 20,
     fontWeight: '700',
   },
@@ -209,20 +220,20 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#18181b',
+    backgroundColor: colors.muted,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
   },
   promptTitle: {
-    color: '#ffffff',
+    color: colors.textPrimary,
     fontSize: 22,
     fontWeight: '800',
     marginBottom: 8,
     textAlign: 'center',
   },
   promptSub: {
-    color: '#a1a1aa',
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 32,
@@ -231,7 +242,7 @@ const styles = StyleSheet.create({
   authBtnPrimary: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e50914',
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 10,
@@ -241,16 +252,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   authBtnPrimaryText: {
-    color: '#ffffff',
+    color: colors.primaryForeground,
     fontSize: 16,
     fontWeight: '700',
   },
   authBtnSecondary: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#18181b',
+    backgroundColor: colors.muted,
     borderWidth: 1,
-    borderColor: '#27272a',
+    borderColor: colors.border,
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 10,
@@ -259,7 +270,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   authBtnSecondaryText: {
-    color: '#ffffff',
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -267,19 +278,19 @@ const styles = StyleSheet.create({
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#18181b',
+    backgroundColor: colors.card,
     margin: 16,
     borderRadius: 12,
     padding: 16,
     gap: 14,
     borderWidth: 1,
-    borderColor: '#27272a',
+    borderColor: colors.border,
   },
   avatarCircleSmall: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#27272a',
+    backgroundColor: colors.muted,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -287,12 +298,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   userName: {
-    color: '#ffffff',
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
   userEmail: {
-    color: '#a1a1aa',
+    color: colors.textSecondary,
     fontSize: 13,
     marginTop: 2,
   },
@@ -314,7 +325,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   menuSectionTitle: {
-    color: '#71717a',
+    color: colors.textTertiary,
     fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -325,18 +336,18 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#18181b',
+    backgroundColor: colors.card,
     borderRadius: 10,
     paddingVertical: 14,
     paddingHorizontal: 14,
     gap: 12,
     marginBottom: 6,
     borderWidth: 1,
-    borderColor: '#27272a',
+    borderColor: colors.border,
   },
   menuItemText: {
     flex: 1,
-    color: '#f4f4f5',
+    color: colors.textPrimary,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -347,7 +358,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -6,
     right: -8,
-    backgroundColor: '#e50914',
+    backgroundColor: colors.primary,
     borderRadius: 8,
     minWidth: 16,
     height: 16,
@@ -356,7 +367,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   badgeText: {
-    color: '#ffffff',
+    color: colors.primaryForeground,
     fontSize: 9,
     fontWeight: '700',
   },
