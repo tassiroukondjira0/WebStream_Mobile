@@ -17,7 +17,7 @@ import { Api, getBaseApiUrl, resolveApiUrl } from '@/services/api';
 import { MediaSourceItem } from '@/types/media';
 
 const CHROME_USER_AGENT =
-  'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36';
+    'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36';
 
 type ResolvedSources = {
   sources: MediaSourceItem[];
@@ -29,41 +29,40 @@ type EmbedDoc = { url: string; html: string | null };
 
 const NO_REFERRER_META = '<meta name="referrer" content="no-referrer">';
 
-/**
- * Vrai pour les documents d'embed servis par notre API (`/api/embed…`).
- *
- * Le CDN Vidzy répond 403 aux playlists et segments dont l'en-tête `Referer`
- * pointe vers un domaine non autorisé (dont celui de l'app). On charge donc ces
- * documents depuis une copie HTML récupérée par l'app, dans laquelle on force la
- * politique de référant `no-referrer` avant l'exécution des scripts.
- */
 function isEmbedDocumentUrl(url: string): boolean {
   try {
     const target = new URL(url);
     const base = new URL(getBaseApiUrl());
+
     return (
-      target.host.toLowerCase() === base.host.toLowerCase() &&
-      target.pathname.startsWith('/api/embed')
+        target.host.toLowerCase() === base.host.toLowerCase() &&
+        target.pathname.startsWith('/api/embed')
     );
   } catch {
     return false;
   }
 }
 
-/** Force `no-referrer` sur le document d'embed (avant tout script). */
 function withNoReferrerPolicy(html: string): string {
   const existing = /<meta[^>]+name=["']referrer["'][^>]*>/i;
+
   if (existing.test(html)) {
     return html.replace(existing, NO_REFERRER_META);
   }
+
   if (/<head[^>]*>/i.test(html)) {
-    return html.replace(/<head[^>]*>/i, (head) => `${head}${NO_REFERRER_META}`);
+    return html.replace(
+        /<head[^>]*>/i,
+        (head) => `${head}${NO_REFERRER_META}`
+    );
   }
+
   return `${NO_REFERRER_META}${html}`;
 }
 
 export default function PlayerScreen() {
   const router = useRouter();
+
   const params = useLocalSearchParams<{
     id?: string;
     title?: string;
@@ -76,23 +75,33 @@ export default function PlayerScreen() {
 
   const [loading, setLoading] = useState(true);
   const [sources, setSources] = useState<MediaSourceItem[]>([]);
-  const [selectedLang, setSelectedLang] = useState<string>('VF');
-  const [selectedHost, setSelectedHost] = useState<string>('');
-  const [selectedEpisode, setSelectedEpisode] = useState<number>(1);
+
+  const [selectedLang, setSelectedLang] = useState('VF');
+  const [selectedHost, setSelectedHost] = useState('');
+  const [selectedSeason, setSelectedSeason] = useState(1);
+  const [selectedEpisode, setSelectedEpisode] = useState(1);
+
   const [activeUrl, setActiveUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Document d'embed récupéré par l'app (voir `isEmbedDocumentUrl`) + compteur
-  // de rechargement pour forcer une nouvelle récupération.
   const [embedDoc, setEmbedDoc] = useState<EmbedDoc | null>(null);
   const [reloadCount, setReloadCount] = useState(0);
 
-  // Player natif expo-video (pour flux direct mp4 / m3u8)
-  const isDirect = activeUrl ? /\.(m3u8|mp4|webm)($|\?)/i.test(activeUrl) : false;
-  const player = useVideoPlayer(isDirect ? activeUrl : null, (p) => {
-    p.loop = false;
-    p.play();
-  });
+  const isSeries =
+      params.type === 'series' || params.type === 'anime';
+
+  const isDirect = activeUrl
+      ? /\.(m3u8|mp4|webm)($|\?)/i.test(activeUrl)
+      : false;
+
+  // Lecteur vidéo natif
+  const player = useVideoPlayer(
+      isDirect ? activeUrl : null,
+      (p) => {
+        p.loop = false;
+        p.play();
+      }
+  );
 
   useEffect(() => {
     if (isDirect && activeUrl && player) {
@@ -105,12 +114,12 @@ export default function PlayerScreen() {
     }
   }, [isDirect, activeUrl, player]);
 
-  // Résolution des sources vidéo : aucune mise à jour d'état ici, l'appelant
-  // applique le résultat après `await` (règle react-hooks/set-state-in-effect).
+  // Récupération des sources vidéo
   const resolveSources = useCallback(async (): Promise<ResolvedSources> => {
-    // 1. Si une URL directe a été transmise
+    // Cas d'une URL directement transmise
     if (params.streamUrl) {
       const streamUrl = resolveApiUrl(params.streamUrl);
+
       return {
         sources: [
           {
@@ -128,6 +137,7 @@ export default function PlayerScreen() {
     }
 
     const targetId = params.tmdbId || params.id;
+
     if (!targetId) {
       return {
         sources: [],
@@ -137,151 +147,107 @@ export default function PlayerScreen() {
     }
 
     try {
-      // 2. Appel de la route API /api/media-sources
       const res = await Api.getMediaSources(
-        targetId,
-        params.type === 'series' || params.type === 'anime' ? 'series' : 'movie',
-        params.provider || 'FSTREAMTV',
-        params.title || ''
+          targetId,
+          isSeries ? 'series' : 'movie',
+          params.provider || 'FSTREAMTV',
+          params.title || ''
       );
 
-      if (res && res.sources && res.sources.length > 0) {
-        // Corrige les URLs localhost renvoyées par l'API en URLs joignables
-        const resolved = res.sources.map((s: MediaSourceItem) => ({
-          ...s,
-          url: resolveApiUrl(s.url),
-        }));
-        return { sources: resolved, activeUrl: resolved[0].url, error: null };
-      }
-    } catch {
-      // Repli si l'API distante n'est pas encore redéployée
-    }
+      if (res && Array.isArray(res.sources) && res.sources.length > 0) {
+        const resolved = res.sources
+            .filter((source: MediaSourceItem) => {
+              return (
+                  typeof source.url === 'string' &&
+                  source.url.trim().length > 0
+              );
+            })
+            .map((source: MediaSourceItem) => ({
+              ...source,
+              url: resolveApiUrl(source.url),
+              season: Number(source.season) || 1,
+              episode: Number(source.episode) || 1,
+            }));
 
-    // 3. Repli : Extraction directe de l'iframe depuis la page HTML du site
-    try {
-      const baseUrl = getBaseApiUrl();
-      const provider = params.provider || 'FSTREAMTV';
-      const providerPath = provider === 'TMDB' ? 'tmdb' : provider === 'FRENCHSTREAM' ? 'partner' : 'fstreamtv';
-      const typePath = params.type === 'series' || params.type === 'anime' ? 'series' : 'films';
-      const typePathAnime = params.type === 'anime' ? 'animes' : typePath;
-      const webPath = params.webPath || `/${typePathAnime}/${providerPath}/${targetId}`;
-      const pageRes = await fetch(`${baseUrl}${webPath}`, {
-        headers: { 'User-Agent': CHROME_USER_AGENT },
-      });
-
-      if (pageRes.ok) {
-        const html = await pageRes.text();
-        const extracted: MediaSourceItem[] = [];
-        const seenUrls = new Set<string>();
-
-        // Regex d'extraction des embeds
-        const optionRegex = /data-url(?:-default)?="([^"]+)"/gi;
-        let match: RegExpExecArray | null;
-        while ((match = optionRegex.exec(html)) !== null) {
-          const rawUrl = resolveApiUrl(match[1].trim());
-          if (!seenUrls.has(rawUrl)) {
-            seenUrls.add(rawUrl);
-            let host = 'Serveur';
-            try {
-              host = new URL(rawUrl).hostname.replace(/^www\./, '').split('.')[0];
-              host = host.charAt(0).toUpperCase() + host.slice(1);
-            } catch {}
-            extracted.push({
-              host,
-              label: host,
-              lang: 'VF',
-              season: 1,
-              episode: 1,
-              url: rawUrl,
-            });
-          }
-        }
-
-        // Si aucun bouton d'option, chercher la balise iframe brute
-        if (extracted.length === 0) {
-          const iframeMatch = html.match(/<iframe[^>]+src="([^"]+)"/i);
-          if (iframeMatch && iframeMatch[1]) {
-            const rawUrl = resolveApiUrl(iframeMatch[1].trim());
-            extracted.push({
-              host: 'Lecteur Principal',
-              label: 'Lecteur Principal',
-              lang: 'VF',
-              season: 1,
-              episode: 1,
-              url: rawUrl,
-            });
-          }
-        }
-
-        if (extracted.length > 0) {
-          return { sources: extracted, activeUrl: extracted[0].url, error: null };
+        if (resolved.length > 0) {
+          return {
+            sources: resolved,
+            activeUrl: resolved[0].url,
+            error: null,
+          };
         }
       }
-    } catch (extractErr) {
-      console.warn('Extraction repli échouée :', extractErr);
+
+      return {
+        sources: [],
+        activeUrl: null,
+        error:
+            'Aucune source vidéo valide n’a été fournie par le serveur. Réessaie plus tard.',
+      };
+    } catch (apiError) {
+      console.warn(
+          'Erreur de récupération des sources vidéo :',
+          apiError
+      );
+
+      return {
+        sources: [],
+        activeUrl: null,
+        error:
+            'Impossible de récupérer les sources vidéo. Vérifie ta connexion puis réessaie.',
+      };
     }
-
-    // 4. Dernier repli : URL Vidzy directe
-    const isSeries = params.type === 'series' || params.type === 'anime';
-    const fallbackUrl = isSeries
-      ? `https://vidzy.org/serie/${targetId}/1/1?color=7c3aed`
-      : `https://vidzy.org/movie/${targetId}?color=7c3aed`;
-
-    return {
-      sources: [
-        {
-          host: 'Vidzy',
-          label: 'Vidzy',
-          lang: 'VF',
-          season: 1,
-          episode: 1,
-          url: fallbackUrl,
-        },
-      ],
-      activeUrl: fallbackUrl,
-      error: null,
-    };
   }, [
     params.streamUrl,
     params.id,
     params.tmdbId,
-    params.type,
     params.provider,
     params.title,
-    params.webPath,
+    isSeries,
   ]);
 
+  // Application des sources récupérées
   const applySources = useCallback((result: ResolvedSources) => {
     setSources(result.sources);
     setError(result.error);
     setActiveUrl(result.activeUrl);
+    setEmbedDoc(null);
 
     const first = result.sources[0];
+
     if (first) {
       setSelectedLang(first.lang || 'VF');
       setSelectedHost(first.host);
+      setSelectedSeason(first.season || 1);
       setSelectedEpisode(first.episode || 1);
     }
 
     setLoading(false);
   }, []);
 
+  // Rechargement
   const reload = useCallback(() => {
     setLoading(true);
     setError(null);
     setEmbedDoc(null);
+
     setReloadCount((count) => count + 1);
+
     void (async () => {
-      applySources(await resolveSources());
+      const result = await resolveSources();
+      applySources(result);
     })();
   }, [applySources, resolveSources]);
 
+  // Chargement initial
   useEffect(() => {
     let cancelled = false;
 
     void (async () => {
       const result = await resolveSources();
+
       if (cancelled) return;
+
       applySources(result);
     })();
 
@@ -290,31 +256,46 @@ export default function PlayerScreen() {
     };
   }, [resolveSources, applySources]);
 
-  // Charge le HTML de l'embed côté app : c'est le seul moyen de maîtriser la
-  // politique de référant du document (le CDN Vidzy rejette les requêtes dont
-  // le Referer pointe vers notre domaine).
+  // Chargement des documents d'embed de notre API
   useEffect(() => {
     const url = activeUrl;
+
     if (!url || isDirect || !isEmbedDocumentUrl(url)) {
       return;
     }
 
     let cancelled = false;
+
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15000);
+
+    const timer = setTimeout(() => {
+      controller.abort();
+    }, 15000);
 
     void (async () => {
       try {
         const res = await fetch(url, {
-          headers: { Accept: 'text/html' },
+          headers: {
+            Accept: 'text/html',
+          },
           signal: controller.signal,
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
         const html = withNoReferrerPolicy(await res.text());
-        if (!cancelled) setEmbedDoc({ url, html });
+
+        if (!cancelled) {
+          setEmbedDoc({ url, html });
+        }
       } catch (err) {
-        console.warn('Lecteur embarqué indisponible, repli sur l’URL :', err);
-        if (!cancelled) setEmbedDoc({ url, html: null });
+        console.warn('Erreur chargement embed :', err);
+
+        if (!cancelled) {
+          setEmbedDoc({ url, html: null });
+        }
       } finally {
         clearTimeout(timer);
       }
@@ -327,28 +308,61 @@ export default function PlayerScreen() {
     };
   }, [activeUrl, isDirect, reloadCount]);
 
-  // Filtrage selon les choix de l'utilisateur
+  // Langues disponibles
   const availableLangs = useMemo(() => {
-    const langs = Array.from(new Set(sources.map((s) => s.lang)));
+    const langs = Array.from(
+        new Set(sources.map((source) => source.lang || 'VF'))
+    );
+
     return langs.length > 0 ? langs : ['VF'];
   }, [sources]);
 
+  // Sources de la langue sélectionnée
   const langSources = useMemo(() => {
-    const list = sources.filter((s) => s.lang === selectedLang);
+    const list = sources.filter(
+        (source) => (source.lang || 'VF') === selectedLang
+    );
+
     return list.length > 0 ? list : sources;
   }, [sources, selectedLang]);
 
-  const episodes = useMemo(() => {
-    const eps = Array.from(new Set(langSources.map((s) => s.episode || 1))).sort((a, b) => a - b);
-    return eps;
+  // Saisons disponibles
+  const seasons = useMemo(() => {
+    return Array.from(
+        new Set(
+            langSources.map((source) => Number(source.season) || 1)
+        )
+    ).sort((a, b) => a - b);
   }, [langSources]);
 
-  const episodeSources = useMemo(() => {
-    return langSources.filter((s) => (s.episode || 1) === selectedEpisode);
-  }, [langSources, selectedEpisode]);
+  // Sources de la saison sélectionnée
+  const seasonSources = useMemo(() => {
+    return langSources.filter(
+        (source) =>
+            (Number(source.season) || 1) === selectedSeason
+    );
+  }, [langSources, selectedSeason]);
 
-  // Source du WebView : document HTML récupéré (sans Referer) pour nos embeds,
-  // URL directe sinon. `null` = document en cours de récupération.
+  // Épisodes de la saison sélectionnée
+  const episodes = useMemo(() => {
+    return Array.from(
+        new Set(
+            seasonSources.map(
+                (source) => Number(source.episode) || 1
+            )
+        )
+    ).sort((a, b) => a - b);
+  }, [seasonSources]);
+
+  // Serveurs disponibles pour l'épisode sélectionné
+  const episodeSources = useMemo(() => {
+    return seasonSources.filter(
+        (source) =>
+            (Number(source.episode) || 1) === selectedEpisode
+    );
+  }, [seasonSources, selectedEpisode]);
+
+  // Document affiché dans le WebView
   const webViewSource = useMemo(() => {
     if (!activeUrl) return null;
 
@@ -362,200 +376,319 @@ export default function PlayerScreen() {
       };
     }
 
-    const doc = embedDoc && embedDoc.url === activeUrl ? embedDoc : null;
+    const doc =
+        embedDoc && embedDoc.url === activeUrl
+            ? embedDoc
+            : null;
+
     if (!doc) return null;
-    return doc.html ? { html: doc.html, baseUrl: activeUrl } : { uri: activeUrl };
+
+    return doc.html
+        ? { html: doc.html, baseUrl: activeUrl }
+        : { uri: activeUrl };
   }, [activeUrl, embedDoc]);
 
+  // Changement de langue
   const handleSelectLang = (lang: string) => {
     setSelectedLang(lang);
-    const available = sources.filter((s) => s.lang === lang);
+
+    const available = sources.filter(
+        (source) => (source.lang || 'VF') === lang
+    );
+
     if (available.length > 0) {
-      setSelectedHost(available[0].host);
-      setActiveUrl(available[0].url);
-    }
-  };
+      const target = available[0];
 
-  const handleSelectHost = (source: MediaSourceItem) => {
-    setSelectedHost(source.host);
-    setActiveUrl(source.url);
-  };
-
-  const handleSelectEpisode = (ep: number) => {
-    setSelectedEpisode(ep);
-    const target = langSources.find((s) => (s.episode || 1) === ep);
-    if (target) {
+      setSelectedSeason(Number(target.season) || 1);
+      setSelectedEpisode(Number(target.episode) || 1);
       setSelectedHost(target.host);
       setActiveUrl(target.url);
     }
   };
 
+  // Changement de saison
+  const handleSelectSeason = (season: number) => {
+    setSelectedSeason(season);
+
+    const target = langSources.find(
+        (source) =>
+            (Number(source.season) || 1) === season
+    );
+
+    if (target) {
+      setSelectedEpisode(Number(target.episode) || 1);
+      setSelectedHost(target.host);
+      setActiveUrl(target.url);
+    }
+  };
+
+  // Changement de serveur
+  const handleSelectHost = (source: MediaSourceItem) => {
+    setSelectedHost(source.host);
+    setActiveUrl(source.url);
+    setEmbedDoc(null);
+  };
+
+  // Changement d'épisode
+  const handleSelectEpisode = (episode: number) => {
+    setSelectedEpisode(episode);
+
+    const target = seasonSources.find(
+        (source) =>
+            (Number(source.episode) || 1) === episode
+    );
+
+    if (target) {
+      setSelectedHost(target.host);
+      setActiveUrl(target.url);
+      setEmbedDoc(null);
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      {/* Barre de navigation supérieure */}
-      <SafeAreaView edges={['top']} style={styles.header}>
-        <TouchableOpacity
-          style={styles.circleBtn}
-          onPress={() => router.back()}
-          activeOpacity={0.8}>
-          <ArrowLeft color="#ffffff" size={22} />
-        </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle} numberOfLines={1}>
-            {params.title || 'Lecture Vidéo'}
-          </Text>
-          {selectedHost ? (
-            <Text style={styles.headerSub}>
-              {selectedHost} • {selectedLang}
-              {(params.type === 'series' || params.type === 'anime') ? ` • Ép. ${selectedEpisode}` : ''}
+      <View style={styles.container}>
+        {/* En-tête */}
+        <SafeAreaView edges={['top']} style={styles.header}>
+          <TouchableOpacity
+              style={styles.circleBtn}
+              onPress={() => router.back()}
+              activeOpacity={0.8}
+          >
+            <ArrowLeft color="#ffffff" size={22} />
+          </TouchableOpacity>
+
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle} numberOfLines={1}>
+              {params.title || 'Lecture Vidéo'}
             </Text>
+
+            {selectedHost ? (
+                <Text style={styles.headerSub}>
+                  {selectedHost} • {selectedLang}
+                  {isSeries
+                      ? ` • S${selectedSeason} Ép. ${selectedEpisode}`
+                      : ''}
+                </Text>
+            ) : null}
+          </View>
+        </SafeAreaView>
+
+        {/* Lecteur vidéo */}
+        <View style={styles.videoSurface}>
+          {loading ? (
+              <View style={styles.centerContainer}>
+                <ActivityIndicator size="large" color="#e50914" />
+                <Text style={styles.loadingText}>
+                  Recherche des serveurs disponibles...
+                </Text>
+              </View>
+          ) : error ? (
+              <View style={styles.centerContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+
+                <TouchableOpacity
+                    style={styles.retryBtn}
+                    onPress={reload}
+                >
+                  <RefreshCw color="#ffffff" size={16} />
+                  <Text style={styles.retryText}>Réessayer</Text>
+                </TouchableOpacity>
+              </View>
+          ) : activeUrl && isDirect ? (
+              <VideoView
+                  style={styles.videoPlayer}
+                  player={player}
+                  nativeControls
+                  allowsPictureInPicture
+                  startsPictureInPictureAutomatically
+              />
+          ) : activeUrl && !webViewSource ? (
+              <View style={styles.centerContainer}>
+                <ActivityIndicator size="large" color="#e50914" />
+                <Text style={styles.loadingText}>
+                  Chargement du lecteur...
+                </Text>
+              </View>
+          ) : activeUrl && webViewSource ? (
+              <WebView
+                  key={`${activeUrl}#${reloadCount}`}
+                  source={webViewSource}
+                  style={styles.videoPlayer}
+                  originWhitelist={['*']}
+                  allowsFullscreenVideo
+                  javaScriptEnabled
+                  domStorageEnabled
+                  mixedContentMode="always"
+                  mediaPlaybackRequiresUserAction={false}
+                  allowsInlineMediaPlayback
+                  userAgent={CHROME_USER_AGENT}
+                  onError={() => {
+                    setError(
+                        'Impossible de charger le lecteur vidéo. Vérifie ta connexion puis réessaie.'
+                    );
+                  }}
+              />
           ) : null}
         </View>
-      </SafeAreaView>
 
-      {/* Surface Vidéo (Natif direct ou Embed pur) */}
-      <View style={styles.videoSurface}>
-        {loading ? (
-          <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color="#e50914" />
-            <Text style={styles.loadingText}>Recherche des serveurs disponibles...</Text>
-          </View>
-        ) : error ? (
-          <View style={styles.centerContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryBtn} onPress={reload}>
-              <RefreshCw color="#ffffff" size={16} />
-              <Text style={styles.retryText}>Réessayer</Text>
-            </TouchableOpacity>
-          </View>
-        ) : activeUrl && isDirect ? (
-          // Lecteur Expo Video 100% natif
-          <VideoView
-            style={styles.videoPlayer}
-            player={player}
-            nativeControls
-            allowsPictureInPicture
-            startsPictureInPictureAutomatically
-          />
-        ) : activeUrl && !webViewSource ? (
-          <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color="#e50914" />
-            <Text style={styles.loadingText}>Chargement du lecteur...</Text>
-          </View>
-        ) : activeUrl && webViewSource ? (
-          // Iframe pur du lecteur vidéo (Uqload, Vidzy, Voe, etc.)
-          <WebView
-            key={`${activeUrl}#${reloadCount}`}
-            source={webViewSource}
-            style={styles.videoPlayer}
-            originWhitelist={['*']}
-            allowsFullscreenVideo
-            javaScriptEnabled
-            domStorageEnabled
-            mixedContentMode="always"
-            mediaPlaybackRequiresUserAction={false}
-            allowsInlineMediaPlayback
-            userAgent={CHROME_USER_AGENT}
-            onError={() => {
-              setError(
-                "Impossible de charger le lecteur vidéo. Vérifiez votre connexion puis réessayez."
-              );
-            }}
-          />
-        ) : null}
+        {/* Commandes du lecteur */}
+        <ScrollView
+            style={styles.controlsScroll}
+            showsVerticalScrollIndicator={false}
+        >
+          {/* Langues */}
+          {availableLangs.length > 1 && (
+              <View style={styles.controlSection}>
+                <View style={styles.sectionHeader}>
+                  <Volume2 color="#a1a1aa" size={16} />
+                  <Text style={styles.sectionTitle}>
+                    Langue audio
+                  </Text>
+                </View>
+
+                <View style={styles.pillsRow}>
+                  {availableLangs.map((lang) => (
+                      <TouchableOpacity
+                          key={lang}
+                          style={[
+                            styles.pill,
+                            selectedLang === lang && styles.activePill,
+                          ]}
+                          onPress={() => handleSelectLang(lang)}
+                          activeOpacity={0.8}
+                      >
+                        <Text
+                            style={[
+                              styles.pillText,
+                              selectedLang === lang &&
+                              styles.activePillText,
+                            ]}
+                        >
+                          {lang}
+                        </Text>
+                      </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+          )}
+
+          {/* Saisons */}
+          {isSeries && seasons.length > 1 && (
+              <View style={styles.controlSection}>
+                <Text style={styles.sectionTitle}>Saisons</Text>
+
+                <View style={styles.pillsRow}>
+                  {seasons.map((season) => (
+                      <TouchableOpacity
+                          key={season}
+                          style={[
+                            styles.pill,
+                            selectedSeason === season &&
+                            styles.activePill,
+                          ]}
+                          onPress={() => handleSelectSeason(season)}
+                          activeOpacity={0.8}
+                      >
+                        <Text
+                            style={[
+                              styles.pillText,
+                              selectedSeason === season &&
+                              styles.activePillText,
+                            ]}
+                        >
+                          Saison {season}
+                        </Text>
+                      </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+          )}
+
+          {/* Serveurs */}
+          {episodeSources.length > 0 && (
+              <View style={styles.controlSection}>
+                <View style={styles.sectionHeader}>
+                  <Server color="#a1a1aa" size={16} />
+                  <Text style={styles.sectionTitle}>
+                    Changer de serveur
+                  </Text>
+                </View>
+
+                <View style={styles.pillsRow}>
+                  {episodeSources.map((source, index) => {
+                    const isActive = activeUrl === source.url;
+
+                    return (
+                        <TouchableOpacity
+                            key={`${source.host}-${index}`}
+                            style={[
+                              styles.serverPill,
+                              isActive && styles.activeServerPill,
+                            ]}
+                            onPress={() => handleSelectHost(source)}
+                            activeOpacity={0.8}
+                        >
+                          {isActive && (
+                              <Check color="#ffffff" size={14} />
+                          )}
+
+                          <Text
+                              style={[
+                                styles.serverPillText,
+                                isActive &&
+                                styles.activeServerPillText,
+                              ]}
+                          >
+                            {source.label || source.host}
+                          </Text>
+                        </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+          )}
+
+          {/* Épisodes */}
+          {isSeries && episodes.length > 0 && (
+              <View style={styles.controlSection}>
+                <Text style={styles.sectionTitle}>
+                  Épisodes — Saison {selectedSeason}
+                </Text>
+
+                <FlatList
+                    data={episodes}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    keyExtractor={(episode) => episode.toString()}
+                    contentContainerStyle={styles.episodesList}
+                    renderItem={({ item: episode }) => (
+                        <TouchableOpacity
+                            style={[
+                              styles.epPill,
+                              selectedEpisode === episode &&
+                              styles.activeEpPill,
+                            ]}
+                            onPress={() => handleSelectEpisode(episode)}
+                            activeOpacity={0.8}
+                        >
+                          <Text
+                              style={[
+                                styles.epPillText,
+                                selectedEpisode === episode &&
+                                styles.activeEpPillText,
+                              ]}
+                          >
+                            Épisode {episode}
+                          </Text>
+                        </TouchableOpacity>
+                    )}
+                />
+              </View>
+          )}
+
+          <View style={styles.bottomSpacer} />
+        </ScrollView>
       </View>
-
-      {/* Panneau de contrôle natif (Langues, Serveurs, Épisodes) */}
-      <ScrollView style={styles.controlsScroll} showsVerticalScrollIndicator={false}>
-        {/* 1. Choix de la Langue */}
-        {availableLangs.length > 1 && (
-          <View style={styles.controlSection}>
-            <View style={styles.sectionHeader}>
-              <Volume2 color="#a1a1aa" size={16} />
-              <Text style={styles.sectionTitle}>Langue audio</Text>
-            </View>
-            <View style={styles.pillsRow}>
-              {availableLangs.map((lang) => (
-                <TouchableOpacity
-                  key={lang}
-                  style={[styles.pill, selectedLang === lang && styles.activePill]}
-                  onPress={() => handleSelectLang(lang)}
-                  activeOpacity={0.8}>
-                  <Text
-                    style={[
-                      styles.pillText,
-                      selectedLang === lang && styles.activePillText,
-                    ]}>
-                    {lang}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* 2. Choix du Serveur / Hébergeur */}
-        {episodeSources.length > 0 && (
-          <View style={styles.controlSection}>
-            <View style={styles.sectionHeader}>
-              <Server color="#a1a1aa" size={16} />
-              <Text style={styles.sectionTitle}>Changer de serveur</Text>
-            </View>
-            <View style={styles.pillsRow}>
-              {episodeSources.map((source, index) => {
-                const isActive = activeUrl === source.url;
-                return (
-                  <TouchableOpacity
-                    key={`${source.host}-${index}`}
-                    style={[styles.serverPill, isActive && styles.activeServerPill]}
-                    onPress={() => handleSelectHost(source)}
-                    activeOpacity={0.8}>
-                    {isActive ? <Check color="#ffffff" size={14} /> : null}
-                    <Text
-                      style={[
-                        styles.serverPillText,
-                        isActive && styles.activeServerPillText,
-                      ]}>
-                      {source.label || source.host}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        )}
-
-        {/* 3. Choix des Épisodes (pour les Séries) */}
-        {(params.type === 'series' || params.type === 'anime') && episodes.length > 1 && (
-          <View style={styles.controlSection}>
-            <Text style={styles.sectionTitle}>Épisodes</Text>
-            <FlatList
-              data={episodes}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(ep) => ep.toString()}
-              contentContainerStyle={styles.episodesList}
-              renderItem={({ item: ep }) => (
-                <TouchableOpacity
-                  style={[styles.epPill, selectedEpisode === ep && styles.activeEpPill]}
-                  onPress={() => handleSelectEpisode(ep)}
-                  activeOpacity={0.8}>
-                  <Text
-                    style={[
-                      styles.epPillText,
-                      selectedEpisode === ep && styles.activeEpPillText,
-                    ]}>
-                    Épisode {ep}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        )}
-
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
-    </View>
   );
 }
 
