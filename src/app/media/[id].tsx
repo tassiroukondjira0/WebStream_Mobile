@@ -132,6 +132,7 @@ export default function MediaDetailScreen() {
         id: media.id,
         title: media.title,
         tmdbId,
+        externalId: media.externalId || tmdbId,
         type: media.type === 'SERIES' ? 'series' : media.type === 'ANIME' ? 'anime' : 'movie',
         provider,
         webPath,

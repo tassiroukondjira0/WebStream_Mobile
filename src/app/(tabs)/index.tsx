@@ -12,7 +12,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Bell, Play, Search } from 'lucide-react-native';
-import { Api } from '@/services/api';
+import { deduplicateMediaItems, filterMisclassifiedAnime } from '@/services/media.utils';
+import { getCatalogCached, clearAllCatalogCache } from '@/services/media.cache';
 import { MediaItem } from '@/types/media';
 import { MediaRow } from '@/components/MediaRow';
 import { useNotifications } from '@/context/NotificationContext';
@@ -32,15 +33,15 @@ export default function HomeScreen() {
 
   const loadData = useCallback(async () => {
     const [moviesRes, seriesRes, animesRes] = await Promise.allSettled([
-      Api.getCatalog('MOVIE', 1, 15),
-      Api.getCatalog('SERIES', 1, 15),
-      Api.getCatalog('ANIME', 1, 15),
+      getCatalogCached('MOVIE', 1, 15),
+      getCatalogCached('SERIES', 1, 15),
+      getCatalogCached('ANIME', 1, 15),
     ]);
 
     return {
-      movieList: moviesRes.status === 'fulfilled' ? moviesRes.value.items : [],
-      seriesList: seriesRes.status === 'fulfilled' ? seriesRes.value.items : [],
-      animeList: animesRes.status === 'fulfilled' ? animesRes.value.items : [],
+      movieList: moviesRes.status === 'fulfilled' ? deduplicateMediaItems(moviesRes.value.items) : [],
+      seriesList: seriesRes.status === 'fulfilled' ? filterMisclassifiedAnime(deduplicateMediaItems(seriesRes.value.items)) : [],
+      animeList: animesRes.status === 'fulfilled' ? deduplicateMediaItems(animesRes.value.items) : [],
     };
   }, []);
 
@@ -89,6 +90,7 @@ export default function HomeScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
+      await clearAllCatalogCache();
       applyData(await loadData());
     } catch (err) {
       console.error('Erreur rafraîchissement catalogue :', err);

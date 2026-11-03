@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   ScrollView,
   StyleSheet,
   Text,
@@ -65,6 +64,7 @@ export default function PlayerScreen() {
 
   const params = useLocalSearchParams<{
     id?: string;
+    externalId?: string;
     title?: string;
     tmdbId?: string;
     type?: string;
@@ -87,8 +87,17 @@ export default function PlayerScreen() {
   const [embedDoc, setEmbedDoc] = useState<EmbedDoc | null>(null);
   const [reloadCount, setReloadCount] = useState(0);
 
+  const mediaType = (params.type || 'movie').toLowerCase();
+
   const isSeries =
-      params.type === 'series' || params.type === 'anime';
+      mediaType === 'series' || mediaType === 'anime';
+
+  const provider = (params.provider || 'FSTREAMTV').toUpperCase();
+
+  const targetId =
+      provider === 'TMDB'
+          ? params.tmdbId || params.externalId || params.id
+          : params.externalId || params.id;
 
   const isDirect = activeUrl
       ? /\.(m3u8|mp4|webm)($|\?)/i.test(activeUrl)
@@ -136,7 +145,6 @@ export default function PlayerScreen() {
       };
     }
 
-    const targetId = params.tmdbId || params.id;
 
     if (!targetId) {
       return {
@@ -147,9 +155,10 @@ export default function PlayerScreen() {
     }
 
     try {
+      const apiType = mediaType === 'anime' ? 'anime' : mediaType === 'series' ? 'series' : 'movie';
       const res = await Api.getMediaSources(
           targetId,
-          isSeries ? 'series' : 'movie',
+          apiType,
           params.provider || 'FSTREAMTV',
           params.title || ''
       );
@@ -366,27 +375,14 @@ export default function PlayerScreen() {
   const webViewSource = useMemo(() => {
     if (!activeUrl) return null;
 
-    if (!isEmbedDocumentUrl(activeUrl)) {
-      return {
-        uri: activeUrl,
-        headers: {
-          Referer: getBaseApiUrl(),
-          Origin: getBaseApiUrl(),
-        },
-      };
-    }
-
-    const doc =
-        embedDoc && embedDoc.url === activeUrl
-            ? embedDoc
-            : null;
-
-    if (!doc) return null;
-
-    return doc.html
-        ? { html: doc.html, baseUrl: activeUrl }
-        : { uri: activeUrl };
-  }, [activeUrl, embedDoc]);
+    return {
+      uri: activeUrl,
+      headers: {
+        Referer: getBaseApiUrl(),
+        Origin: getBaseApiUrl(),
+      },
+    };
+  }, [activeUrl]);
 
   // Changement de langue
   const handleSelectLang = (lang: string) => {
@@ -577,7 +573,7 @@ export default function PlayerScreen() {
               <View style={styles.controlSection}>
                 <Text style={styles.sectionTitle}>Saisons</Text>
 
-                <View style={styles.pillsRow}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.seasonsScroll}>
                   {seasons.map((season) => (
                       <TouchableOpacity
                           key={season}
@@ -600,7 +596,7 @@ export default function PlayerScreen() {
                         </Text>
                       </TouchableOpacity>
                   ))}
-                </View>
+                </ScrollView>
               </View>
           )}
 
@@ -655,34 +651,48 @@ export default function PlayerScreen() {
                   Épisodes — Saison {selectedSeason}
                 </Text>
 
-                <FlatList
-                    data={episodes}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    keyExtractor={(episode) => episode.toString()}
-                    contentContainerStyle={styles.episodesList}
-                    renderItem={({ item: episode }) => (
+                <View style={styles.episodesVerticalList}>
+                  {episodes.map((episode) => {
+                    const epSource = episodeSources.find(
+                        (s) => s.episode === episode && s.season === selectedSeason
+                    );
+                    const epTitle = epSource?.label || '';
+                    const isActive = selectedEpisode === episode;
+
+                    return (
                         <TouchableOpacity
+                            key={episode}
                             style={[
-                              styles.epPill,
-                              selectedEpisode === episode &&
-                              styles.activeEpPill,
+                              styles.episodeRow,
+                              isActive && styles.activeEpisodeRow,
                             ]}
                             onPress={() => handleSelectEpisode(episode)}
-                            activeOpacity={0.8}
+                            activeOpacity={0.7}
                         >
-                          <Text
-                              style={[
-                                styles.epPillText,
-                                selectedEpisode === episode &&
-                                styles.activeEpPillText,
-                              ]}
-                          >
-                            Épisode {episode}
-                          </Text>
+                          <View style={styles.episodeNumberContainer}>
+                            <Text
+                                style={[
+                                  styles.episodeNumber,
+                                  isActive && styles.activeEpisodeNumber,
+                                ]}
+                            >
+                              {episode}
+                            </Text>
+                          </View>
+                          <View style={styles.episodeInfo}>
+                            <Text
+                                style={[
+                                  styles.episodeTitle,
+                                  isActive && styles.activeEpisodeTitle,
+                                ]}
+                            >
+                              {epTitle || `Épisode ${episode}`}
+                            </Text>
+                          </View>
                         </TouchableOpacity>
-                    )}
-                />
+                    );
+                  })}
+                </View>
               </View>
           )}
 
@@ -838,30 +848,56 @@ const styles = StyleSheet.create({
   activeServerPillText: {
     color: '#ffffff',
   },
-  episodesList: {
-    paddingVertical: 8,
-    gap: 8,
+  seasonsScroll: {
+    flexDirection: 'row',
+    paddingVertical: 4,
+    gap: 10,
   },
-  epPill: {
+  episodesVerticalList: {
+    gap: 6,
+  },
+  episodeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#18181b',
+    borderRadius: 10,
+    paddingVertical: 12,
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginRight: 8,
     borderWidth: 1,
     borderColor: '#27272a',
+    gap: 12,
   },
-  activeEpPill: {
+  activeEpisodeRow: {
     backgroundColor: '#e50914',
     borderColor: '#e50914',
   },
-  epPillText: {
-    color: '#a1a1aa',
-    fontSize: 13,
-    fontWeight: '600',
+  episodeNumberContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#27272a',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  activeEpPillText: {
+  episodeNumber: {
+    color: '#a1a1aa',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  activeEpisodeNumber: {
     color: '#ffffff',
+  },
+  episodeInfo: {
+    flex: 1,
+  },
+  episodeTitle: {
+    color: '#d4d4d8',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  activeEpisodeTitle: {
+    color: '#ffffff',
+    fontWeight: '600',
   },
   bottomSpacer: {
     height: 40,

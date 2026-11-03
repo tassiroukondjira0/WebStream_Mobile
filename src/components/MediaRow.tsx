@@ -3,6 +3,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { MediaItem } from '@/types/media';
 import { MediaCard } from './MediaCard';
 import { colors } from '@/theme/theme';
+import { getStableKey } from '@/services/media.utils';
 
 interface MediaRowProps {
   title: string;
@@ -21,7 +22,7 @@ export function MediaRow({ title, items }: MediaRowProps) {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        keyExtractor={(item) => item.id || item.externalId || Math.random().toString()}
+        keyExtractor={(item) => getStableKey(item)}
         renderItem={({ item }) => <MediaCard media={item} />}
       />
     </View>

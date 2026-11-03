@@ -247,9 +247,22 @@ export const Api = {
   },
 
   // Récupération des sources directes (Vidzy, Uqload, Voe, etc.)
-  async getMediaSources(id: string, type: string = 'movie', provider: string = 'FSTREAMTV', title: string = ''): Promise<MediaSourcesResponse> {
-    const encTitle = encodeURIComponent(title);
-    return request<MediaSourcesResponse>(`/api/media-sources?id=${id}&type=${type}&provider=${provider}&title=${encTitle}`);
+  async getMediaSources(
+      id: string,
+      type: string = 'movie',
+      provider: string = 'FSTREAMTV',
+      title: string = ''
+  ): Promise<MediaSourcesResponse> {
+    const params = new URLSearchParams({
+      id,
+      type,
+      provider,
+      title,
+    });
+
+    return request<MediaSourcesResponse>(
+        `/api/media-sources?${params.toString()}`
+    );
   },
 
   // Authentification

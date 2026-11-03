@@ -8,7 +8,8 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Api } from '@/services/api';
+import { deduplicateMediaItems } from '@/services/media.utils';
+import { getCatalogCached, clearCacheForType } from '@/services/media.cache';
 import { MediaItem } from '@/types/media';
 import { MediaRow } from '@/components/MediaRow';
 import { colors } from '@/theme/theme';
@@ -40,11 +41,11 @@ export default function AnimesScreen() {
   const loadAnimes = useCallback(async () => {
     const results: MediaItem[] = [];
     for (let page = 1; page <= 3; page++) {
-      const res = await Api.getCatalog('ANIME', page, 20);
+      const res = await getCatalogCached('ANIME', page, 20);
       results.push(...res.items);
       if (page >= res.pagination?.totalPages) break;
     }
-    return results;
+    return deduplicateMediaItems(results);
   }, []);
 
   const distributeItems = useCallback((items: MediaItem[]) => {
@@ -80,6 +81,7 @@ export default function AnimesScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     initialLoaded.current = false;
+    await clearCacheForType('ANIME');
     await fetchInitial();
   }, [fetchInitial]);
 

@@ -8,7 +8,8 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Api } from '@/services/api';
+import { deduplicateMediaItems, filterMisclassifiedAnime } from '@/services/media.utils';
+import { getCatalogCached, clearCacheForType } from '@/services/media.cache';
 import { MediaItem } from '@/types/media';
 import { MediaRow } from '@/components/MediaRow';
 import { colors } from '@/theme/theme';
@@ -40,11 +41,12 @@ export default function SeriesScreen() {
   const loadSeries = useCallback(async () => {
     const results: MediaItem[] = [];
     for (let page = 1; page <= 3; page++) {
-      const res = await Api.getCatalog('SERIES', page, 20);
+      const res = await getCatalogCached('SERIES', page, 20);
       results.push(...res.items);
       if (page >= res.pagination?.totalPages) break;
     }
-    return results;
+    const deduplicated = deduplicateMediaItems(results);
+    return filterMisclassifiedAnime(deduplicated);
   }, []);
 
   const distributeItems = useCallback((items: MediaItem[]) => {
@@ -80,6 +82,7 @@ export default function SeriesScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     initialLoaded.current = false;
+    await clearCacheForType('SERIES');
     await fetchInitial();
   }, [fetchInitial]);
 

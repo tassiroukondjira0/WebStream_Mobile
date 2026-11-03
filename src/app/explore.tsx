@@ -12,8 +12,43 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Search, X } from 'lucide-react-native';
-import { Api } from '@/services/api';
-import { SearchResultItem } from '@/types/media';
+import { Api, toMediaSlug } from '@/services/api';
+import { MediaItem, SearchResultItem } from '@/types/media';
+
+/**
+ * Filter out anime misclassified as SERIES from search results.
+ * These items have href starting with 'series/' but are actually anime,
+ * so they won't work properly in the player.
+ */
+function filterBrokenAnimeFromSearch(items: SearchResultItem[]): SearchResultItem[] {
+  return items.filter(item => {
+    const hrefParts = item.href.split('/').filter(Boolean);
+    const typePlural = (hrefParts[0] ?? '').toLowerCase();
+    const apiType = (item.type || '').toLowerCase();
+    
+    // If href says 'series' but API type says 'anime', this is a misclassified anime
+    if (typePlural === 'series' && apiType === 'anime') {
+      return false;
+    }
+    
+    return true;
+  });
+}
+
+/**
+ * Deduplicate search results by href.
+ * The API may return the same title multiple times with different hrefs or the same href.
+ */
+function deduplicateSearchResults(items: SearchResultItem[]): SearchResultItem[] {
+  const seen = new Map<string, SearchResultItem>();
+  for (const item of items) {
+    const key = item.href.toLowerCase().trim();
+    if (!seen.has(key)) {
+      seen.set(key, item);
+    }
+  }
+  return Array.from(seen.values());
+}
 
 function getTypeLabel(href: string): string {
   const first = href.split('/').filter(Boolean)[0] ?? '';
@@ -41,7 +76,9 @@ export default function ExploreScreen() {
     setHasSearched(true);
     try {
       const res = await Api.search(text, 24);
-      setResults(res.results || []);
+      const deduplicated = deduplicateSearchResults(res.results || []);
+      const filtered = filterBrokenAnimeFromSearch(deduplicated);
+      setResults(filtered);
     } catch (err) {
       console.error('Erreur recherche :', err);
     } finally {
@@ -60,33 +97,54 @@ export default function ExploreScreen() {
     const parts = item.href.split('/').filter(Boolean);
     // Format attendu : [typePlural, provider, id]
     const typePlural = parts[0] ?? '';
-    const provider = parts[1] ?? 'fstreamtv';
+    const providerSegment = (parts[1] ?? 'fstreamtv').toLowerCase();
     const rawId = parts[2] ?? '';
 
-    // Mapper le provider vers le format attendu par le player
-    let providerNormalized = 'FSTREAMTV';
-    if (provider === 'tmdb') providerNormalized = 'TMDB';
-    else if (provider === 'partner') providerNormalized = 'FRENCHSTREAM';
-    else if (provider === 'frenchmanga') providerNormalized = 'FRENCHMANGA';
+    // Mapper le segment du provider vers le format attendu par le player et l'API
+    // Ce mappage doit correspondre exactement à SLUG_SEGMENT_PROVIDERS dans api.ts
+    const providerMap: Record<string, string> = {
+      tmdb: 'TMDB',
+      partner: 'FRENCHSTREAM',
+      frenchmanga: 'FRENCHMANGA',
+      fstreamtv: 'FSTREAMTV',
+    };
+    const providerNormalized = providerMap[providerSegment] || 'FSTREAMTV';
 
-    // Déterminer le type depuis l'href (schéma identique à Web_Stream).
-    const mediaType =
-      typePlural === 'series' ? 'SERIES' :
-      typePlural === 'animes' ? 'ANIME' :
-      'MOVIE';
+    // Déterminer le type — privilégier le champ `type` de l'API s'il est fiable,
+    // sinon déduire depuis l'href (schéma identique à Web_Stream).
+    let mediaType: 'MOVIE' | 'SERIES' | 'ANIME';
+    const apiType = (item.type || '').toUpperCase();
+    if (apiType === 'ANIME') {
+      mediaType = 'ANIME';
+    } else if (apiType === 'SERIES') {
+      mediaType = 'SERIES';
+    } else {
+      // Fallback sur l'href si le type API n'est pas fiable
+      mediaType =
+        typePlural === 'series' ? 'SERIES' :
+        typePlural === 'animes' ? 'ANIME' :
+        'MOVIE';
+    }
+
+    // Construire un MediaItem complet avec le slug pour que [id].tsx puisse
+    // reconstruire le chemin web et passer les bons paramètres au lecteur
+    const media: MediaItem = {
+      id: rawId,
+      externalId: rawId,
+      title: item.title,
+      posterUrl: item.posterUrl,
+      type: mediaType,
+      provider: providerNormalized,
+    };
+
+    // Générer le slug pour que getMediaWebPath() et toMediaSlug() fonctionnent
+    media.slug = toMediaSlug(media);
 
     router.push({
       pathname: '/media/[id]',
       params: {
         id: rawId,
-        mediaData: JSON.stringify({
-          id: rawId,
-          externalId: rawId,
-          title: item.title,
-          posterUrl: item.posterUrl,
-          type: mediaType,
-          provider: providerNormalized,
-        }),
+        mediaData: JSON.stringify(media),
       },
     });
   };
@@ -131,7 +189,7 @@ export default function ExploreScreen() {
           data={results}
           numColumns={3}
           contentContainerStyle={styles.listContent}
-          keyExtractor={(item, index) => `${item.href}-${index}`}
+          keyExtractor={(item) => item.href}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.card}
