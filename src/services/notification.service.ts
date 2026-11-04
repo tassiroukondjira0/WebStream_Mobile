@@ -159,7 +159,10 @@ export async function registerDeviceToken(token: string): Promise<void> {
 
 /**
  * Récupère les notifications depuis le serveur (polling).
- * L'API doit exposer GET /api/notifications.
+ * L'API backend retourne { notifications: [...], unread: number }
+ * où chaque notification a: { id, title, message, link, read, type, createdAt }
+ * Le mobile utilise AppNotification { id, title, body, date, read, data }
+ * → on mappe message → body, createdAt → date.
  */
 export async function fetchServerNotifications(): Promise<AppNotification[]> {
   try {
@@ -167,18 +170,22 @@ export async function fetchServerNotifications(): Promise<AppNotification[]> {
     const res = await fetch(`${baseUrl}/api/notifications`);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data)) {
+      // Le backend retourne { notifications: [...], unread: number }
+      const serverNotifications = Array.isArray(data.notifications) ? data.notifications : [];
+      if (serverNotifications.length > 0) {
         const existing = await loadNotifications();
         const existingIds = new Set(existing.map((n) => n.id));
-        const newOnes: AppNotification[] = data
+        const newOnes: AppNotification[] = serverNotifications
           .filter((n: any) => !existingIds.has(n.id))
           .map((n: any) => ({
             id: n.id || Date.now().toString() + Math.random().toString(36).slice(2, 9),
             title: n.title || 'Annonce',
-            body: n.body || n.message || '',
-            date: n.date || new Date().toISOString(),
-            read: false,
-            data: n.data,
+            // Backend: `message` → Mobile: `body`
+            body: n.message || '',
+            // Backend: `createdAt` → Mobile: `date`
+            date: n.createdAt || new Date().toISOString(),
+            read: Boolean(n.read),
+            data: n.link ? { link: n.link } : undefined,
           }));
         if (newOnes.length > 0) {
           const allNotifs = [...newOnes, ...existing];

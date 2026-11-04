@@ -36,8 +36,8 @@ export default function ChangePasswordScreen() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 6 caractères.');
+    if (newPassword.length < 8) {
+      Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 8 caractères avec 3 types différents (minuscules, majuscules, chiffres, symboles).');
       return;
     }
 

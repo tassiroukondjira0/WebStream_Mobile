@@ -344,10 +344,15 @@ export const Api = {
   },
 
   // Modification du mot de passe
+  // Le backend attend: currentPassword, newPassword, confirmPassword
   async changePassword(oldPassword: string, newPassword: string): Promise<{ success: boolean; message?: string }> {
     return request<{ success: boolean; message?: string }>('/api/auth/change-password', {
       method: 'POST',
-      body: JSON.stringify({ oldPassword, newPassword }),
+      body: JSON.stringify({
+        currentPassword: oldPassword,
+        newPassword,
+        confirmPassword: newPassword,
+      }),
     });
   },
 };

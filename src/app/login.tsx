@@ -30,8 +30,8 @@ export default function LoginScreen() {
         setError('Veuillez renseigner tous les champs.');
         return;
       }
-      if (password.length < 6) {
-        setError('Le mot de passe doit contenir au moins 6 caractères.');
+      if (password.length < 8) {
+        setError('Le mot de passe doit contenir au moins 8 caractères avec 3 types différents (minuscules, majuscules, chiffres, symboles).');
         return;
       }
       setError(null);
