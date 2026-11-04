@@ -32,7 +32,6 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-          expo-version: 58
 
       - name: Cache node modules
         uses: actions/cache@v4
