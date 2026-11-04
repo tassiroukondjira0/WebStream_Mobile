@@ -200,3 +200,19 @@ Retirer du catalogue et des résultats de recherche les animés typés comme sé
 - **`src/app/favorites.tsx`** : Appliquer `filterMisclassifiedAnime()` après `Api.getBookmarks()`.
 - **`src/app/wishlist.tsx`** : Appliquer `filterMisclassifiedAnime()` après `Api.getWishlist()`.
 - **Lint et typecheck** : `npx expo lint` (0 erreur, 2 avertissements pré-existants) et `npx tsc --noEmit` passent sans erreur.
+
+### ✓ Step 10 : Nettoyage — suppression des filtres côté client redondants avec le backend
+Le backend Web_Stream gère déjà la déduplication (`isDuplicate: false`), la publication (`isPublished: true`), les sources (`hasSources: true`) et la reclassification ANIME/SERIES (`reclass.ts`). Les filtres côté client sont donc inutiles.
+- **`src/services/media.utils.ts`** : Supprimer `MISCLASSIFIED_ANIME_IDS`, `isNotMisclassifiedAnime()`, `filterMisclassifiedAnime()` et `filterSearchResultsForMisclassifiedAnime()`. Ajouter un commentaire expliquant que le backend est la source de vérité.
+- **`src/app/(tabs)/series.tsx`** : Retirer l'import et l'appel à `filterMisclassifiedAnime()`.
+- **`src/app/(tabs)/index.tsx`** : Retirer l'import et l'appel à `filterMisclassifiedAnime()`.
+- **`src/app/explore.tsx`** : Supprimer `filterBrokenAnimeFromSearch()` et son appel dans `handleSearch()`.
+- **`src/app/favorites.tsx`** : Retirer l'import et l'appel à `filterMisclassifiedAnime()`.
+- **`src/app/wishlist.tsx`** : Retirer l'import et l'appel à `filterMisclassifiedAnime()`.
+- **Lint et typecheck** : `npx expo lint` (0 erreur) et `npx tsc --noEmit` passent sans erreur.
+
+### ✓ Step 11 : Alignement de la recherche mobile sur le scénario Web_Stream
+Le site web utilise `/api/search` qui retourne `{title, href, type, posterUrl}` et navigue directement vers l'href. Le backend dispose aussi de `/api/catalog/search` qui retourne des `MediaItem` complets (id, externalId, provider, type, etc.), identiques au catalogue. L'appli mobile doit utiliser cet endpoint pour obtenir les mêmes données complètes que le catalogue, éliminant la reconstruction fragile du MediaItem.
+- **`src/services/api.ts`** : Ajouter `searchCatalog(query, limit)` qui appelle `/api/catalog/search` au lieu de `/api/search`. Retourner `{ items: MediaItem[] }` au lieu de `{ results: SearchResultItem[] }`.
+- **`src/app/explore.tsx`** : Remplacer `Api.search()` par `Api.searchCatalog()`. Supprimer `handleSelect()` qui reconstruisait le MediaItem — utiliser directement les `MediaItem` retournés. Supprimer `deduplicateSearchResults()` et `getTypeLabel()` — utiliser `deduplicateMediaItems()` de media.utils.ts. Naviguer vers `[id].tsx` avec `mediaData` comme le catalogue.
+- **Lint et typecheck** : `npx expo lint` et `npx tsc --noEmit` passent sans erreur.

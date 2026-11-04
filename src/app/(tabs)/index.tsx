@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Bell, Play, Search } from 'lucide-react-native';
-import { deduplicateMediaItems, filterMisclassifiedAnime } from '@/services/media.utils';
+import { cleanTitle, deduplicateMediaItems } from '@/services/media.utils';
 import { getCatalogCached, clearAllCatalogCache } from '@/services/media.cache';
 import { MediaItem } from '@/types/media';
 import { MediaRow } from '@/components/MediaRow';
@@ -40,7 +40,7 @@ export default function HomeScreen() {
 
     return {
       movieList: moviesRes.status === 'fulfilled' ? deduplicateMediaItems(moviesRes.value.items) : [],
-      seriesList: seriesRes.status === 'fulfilled' ? filterMisclassifiedAnime(deduplicateMediaItems(seriesRes.value.items)) : [],
+      seriesList: seriesRes.status === 'fulfilled' ? deduplicateMediaItems(seriesRes.value.items) : [],
       animeList: animesRes.status === 'fulfilled' ? deduplicateMediaItems(animesRes.value.items) : [],
     };
   }, []);
@@ -159,7 +159,7 @@ export default function HomeScreen() {
           />
           <View style={styles.featuredOverlay}>
             <Text style={styles.featuredTitle} numberOfLines={2}>
-              {featured.title}
+              {cleanTitle(featured.title)}
             </Text>
             {featured.releaseYear && (
               <Text style={styles.featuredYear}>{featured.releaseYear}</Text>

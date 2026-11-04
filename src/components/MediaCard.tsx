@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Heart, Clock } from 'lucide-react-native';
 import { MediaItem } from '@/types/media';
 import { Api, toMediaSlug } from '@/services/api';
+import { cleanTitle } from '@/services/media.utils';
 import { useAuth } from '@/context/AuthContext';
 import { colors } from '@/theme/theme';
 
@@ -111,7 +112,7 @@ export function MediaCard({ media, width = 130 }: MediaCardProps) {
         </View>
       </TouchableOpacity>
       <Text style={styles.title} numberOfLines={2}>
-        {media.title}
+        {cleanTitle(media.title)}
       </Text>
     </View>
   );

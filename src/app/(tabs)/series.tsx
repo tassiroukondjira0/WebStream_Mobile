@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { deduplicateMediaItems, filterMisclassifiedAnime } from '@/services/media.utils';
+import { deduplicateMediaItems } from '@/services/media.utils';
 import { getCatalogCached, clearCacheForType } from '@/services/media.cache';
 import { MediaItem } from '@/types/media';
 import { MediaRow } from '@/components/MediaRow';
@@ -45,8 +45,7 @@ export default function SeriesScreen() {
       results.push(...res.items);
       if (page >= res.pagination?.totalPages) break;
     }
-    const deduplicated = deduplicateMediaItems(results);
-    return filterMisclassifiedAnime(deduplicated);
+    return deduplicateMediaItems(results);
   }, []);
 
   const distributeItems = useCallback((items: MediaItem[]) => {

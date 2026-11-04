@@ -14,7 +14,7 @@ import { Image } from 'expo-image';
 import { ArrowLeft, Heart } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { Api } from '@/services/api';
-import { filterMisclassifiedAnime } from '@/services/media.utils';
+import { cleanTitle } from '@/services/media.utils';
 import { MediaItem } from '@/types/media';
 
 export default function FavoritesScreen() {
@@ -29,7 +29,7 @@ export default function FavoritesScreen() {
     if (!isAuthenticated) return;
     try {
       const { bookmarks } = await Api.getBookmarks();
-      setFavorites(filterMisclassifiedAnime(bookmarks || []));
+      setFavorites(bookmarks || []);
     } catch (err) {
       console.error('Erreur chargement favoris:', err);
     } finally {
@@ -81,7 +81,7 @@ export default function FavoritesScreen() {
         />
         <View style={styles.listInfo}>
           <Text style={styles.listTitle} numberOfLines={2}>
-            {item.title}
+            {cleanTitle(item.title)}
           </Text>
           <View style={styles.listMeta}>
             {item.releaseYear ? (

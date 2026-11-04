@@ -14,6 +14,7 @@ import { Image } from 'expo-image';
 import { ArrowLeft, Bookmark, Check, Play } from 'lucide-react-native';
 import { MediaItem } from '@/types/media';
 import { Api, toMediaSlug } from '@/services/api';
+import { cleanTitle } from '@/services/media.utils';
 import { useAuth } from '@/context/AuthContext';
 
 const { width } = Dimensions.get('window');
@@ -219,7 +220,7 @@ export default function MediaDetailScreen() {
             ) : null}
           </View>
 
-          <Text style={styles.title}>{media.title}</Text>
+          <Text style={styles.title}>{cleanTitle(media.title)}</Text>
 
           {/* Action Buttons */}
           <TouchableOpacity style={styles.playButton} onPress={handlePlay} activeOpacity={0.85}>

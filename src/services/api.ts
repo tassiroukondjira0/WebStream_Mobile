@@ -7,6 +7,7 @@ import {
   User,
   VideoUrlResponse,
 } from '@/types/media';
+import { cleanTitle, slugToFallbackTitle } from '@/services/media.utils';
 
 const TOKEN_KEY = 'cinemax_auth_token';
 
@@ -115,7 +116,7 @@ function mediaFromSlug(
       slug,
       provider: legacyProvider,
       type: 'MOVIE',
-      title: title || slug,
+      title: cleanTitle(title) || slugToFallbackTitle(slug),
       posterUrl: posterMap[slug] ?? null,
       releaseYear: yearMatch ? Number(yearMatch[0]) : undefined,
     };
@@ -132,7 +133,7 @@ function mediaFromSlug(
     slug,
     provider,
     type: mediaType,
-    title: title || slug,
+    title: cleanTitle(title) || slugToFallbackTitle(slug),
     posterUrl: posterMap[slug] ?? null,
     releaseYear: yearMatch ? Number(yearMatch[0]) : undefined,
   };
@@ -235,10 +236,17 @@ export const Api = {
     return request<CatalogResponse>(`/api/catalog?type=${type}&page=${page}&limit=${limit}`);
   },
 
-  // Recherche
+  // Recherche — retourne SearchResultItem[] (format legacy, utilisé par le site web)
   async search(query: string, limit: number = 20): Promise<{ results: SearchResultItem[] }> {
     const encoded = encodeURIComponent(query);
     return request<{ results: SearchResultItem[] }>(`/api/search?q=${encoded}&limit=${limit}`);
+  },
+
+  // Recherche catalogue — retourne MediaItem[] complets (id, externalId, provider, type, etc.)
+  // Identique au format /api/catalog, permet de naviguer directement vers [id].tsx sans reconstruction
+  async searchCatalog(query: string, limit: number = 24): Promise<{ items: MediaItem[] }> {
+    const encoded = encodeURIComponent(query);
+    return request<{ items: MediaItem[] }>(`/api/catalog/search?q=${encoded}&limit=${limit}`);
   },
 
   // Résolution d'URL Vidéo (Directe ou Embed)

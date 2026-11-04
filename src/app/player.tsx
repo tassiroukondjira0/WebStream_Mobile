@@ -13,6 +13,7 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { WebView } from 'react-native-webview';
 import { ArrowLeft, Check, RefreshCw, Server, Volume2 } from 'lucide-react-native';
 import { Api, getBaseApiUrl, resolveApiUrl } from '@/services/api';
+import { cleanTitle } from '@/services/media.utils';
 import { MediaSourceItem } from '@/types/media';
 
 const CHROME_USER_AGENT =
@@ -455,7 +456,7 @@ export default function PlayerScreen() {
 
           <View style={styles.headerTitleContainer}>
             <Text style={styles.headerTitle} numberOfLines={1}>
-              {params.title || 'Lecture Vidéo'}
+              {cleanTitle(params.title) || 'Lecture Vidéo'}
             </Text>
 
             {selectedHost ? (

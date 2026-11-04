@@ -14,7 +14,7 @@ import { Image } from 'expo-image';
 import { ArrowLeft, Clock } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { Api } from '@/services/api';
-import { filterMisclassifiedAnime } from '@/services/media.utils';
+import { cleanTitle } from '@/services/media.utils';
 import { MediaItem } from '@/types/media';
 
 export default function WishlistScreen() {
@@ -29,7 +29,7 @@ export default function WishlistScreen() {
     if (!isAuthenticated) return;
     try {
       const { wishlist: wishItems } = await Api.getWishlist();
-      setWishlist(filterMisclassifiedAnime(wishItems || []));
+      setWishlist(wishItems || []);
     } catch (err) {
       console.error('Erreur chargement souhaits:', err);
     } finally {
@@ -81,7 +81,7 @@ export default function WishlistScreen() {
         />
         <View style={styles.listInfo}>
           <Text style={styles.listTitle} numberOfLines={2}>
-            {item.title}
+            {cleanTitle(item.title)}
           </Text>
           <View style={styles.listMeta}>
             {item.releaseYear ? (

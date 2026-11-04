@@ -1,4 +1,4 @@
-import { MediaItem, SearchResultItem } from '../types/media';
+import { MediaItem } from '../types/media';
 
 /**
  * Generate a stable key for React list reconciliation.
@@ -77,63 +77,61 @@ export function normalizeMediaType(item: MediaItem): MediaItem {
 }
 
 /**
- * Known anime titles/IDs that are misclassified as SERIES by the API.
- * These items should be excluded from the SERIES catalog to avoid broken content.
- * Populate this set with the externalId or title (lowercased) of misclassified anime.
+ * Nettoie un titre d'affichage en supprimant les préfixes/suffixes de type
+ * (Film, Série, Animé, Movie, Series, Anime…) et les marqueurs de saison/épisode
+ * ou de qualité/langue (VF, VOSTFR, HD…).
+ *
+ * Exemples :
+ *   "Film - Inception" → "Inception"
+ *   "Série - Breaking Bad - Saison 1" → "Breaking Bad"
+ *   "Animé - Naruto - Épisode 5" → "Naruto"
+ *   "Inception - VF" → "Inception"
+ *   null/undefined → ""
  */
-const MISCLASSIFIED_ANIME_IDS = new Set<string>([
-  // Add externalId values of anime that appear in SERIES catalog
-  // Example: '12345', 'anime-title-slug', etc.
-]);
+export function cleanTitle(title: string | null | undefined): string {
+  if (!title) return '';
 
-/**
- * Check if a SERIES item is actually a misclassified anime that should be filtered out.
- * Returns true if the item should be kept, false if it should be removed.
- */
-export function isNotMisclassifiedAnime(item: MediaItem): boolean {
-  if (item.type !== 'SERIES') return true;
+  let cleaned = title.trim();
 
-  // Check by externalId
-  if (item.externalId && MISCLASSIFIED_ANIME_IDS.has(item.externalId.toLowerCase())) {
-    return false;
-  }
-  // Check by id
-  if (item.id && MISCLASSIFIED_ANIME_IDS.has(item.id.toLowerCase())) {
-    return false;
-  }
-  // Check by title (lowercased)
-  if (item.title && MISCLASSIFIED_ANIME_IDS.has(item.title.toLowerCase().trim())) {
-    return false;
-  }
+  // Préfixes de type : "Film - ", "Série - ", "Animé - ", "Movie: ", etc.
+  cleaned = cleaned.replace(
+    /^(film|movie|série|serie|sér|anime|animé)\s*[-:–—]\s*/i,
+    ''
+  );
 
-  return true;
+  // Suffixes de saison : " - Saison 1", " - Saison 2", etc.
+  cleaned = cleaned.replace(/\s*[-–—]\s*saison\s*\d+.*$/i, '');
+
+  // Suffixes d'épisode : " - Épisode 5", " - Episode 5", etc.
+  cleaned = cleaned.replace(/\s*[-–—]\s*épisode\s*\d+.*$/i, '');
+  cleaned = cleaned.replace(/\s*[-–—]\s*episode\s*\d+.*$/i, '');
+
+  // Suffixes de qualité / langue : " - VF", " - VOSTFR", " - HD", etc.
+  cleaned = cleaned.replace(/\s*[-–—]\s*(vf|vostfr|hd|french|vo)\s*$/i, '');
+
+  return cleaned.trim();
 }
 
 /**
- * Filter out anime misclassified as SERIES from a catalog list.
- * Use this after deduplication, before displaying the SERIES catalog.
+ * Convertit un slug de favori en titre lisible quand le titleMap ne fournit pas de titre.
+ * Exemple : "tmdb-movie-15139014" → "15139014" (fallback, mieux que le slug brut)
  */
-export function filterMisclassifiedAnime(items: MediaItem[]): MediaItem[] {
-  return items.filter(isNotMisclassifiedAnime);
+export function slugToFallbackTitle(slug: string): string {
+  const m = slug.match(/^(?:partner|frenchmanga|tmdb|fstreamtv)-(?:movie|series|anime)-(.+)$/i);
+  if (m) {
+    return m[1].replace(/[-_]/g, ' ').trim();
+  }
+  return slug;
 }
 
 /**
- * Filter search results to exclude anime that are misclassified as SERIES.
- * If a search result has type 'anime' but the API catalog classifies it as SERIES,
- * it will be excluded from SERIES results but kept in ANIME results.
+ * Note: The backend Web_Stream already filters the catalog at the database level:
+ * - isPublished: true — only admin-published titles
+ * - isDuplicate: false — duplicates marked by dedupe.ts (FRENCHSTREAM vs TMDB)
+ * - hasSources: true — only titles with working video sources
+ * - Anime/Series reclassification is handled by reclass.ts in the backend
+ *
+ * The mobile app trusts the API as the source of truth. No client-side filtering
+ * is needed for misclassified anime — fix them in the backend via reclass.ts instead.
  */
-export function filterSearchResultsForMisclassifiedAnime(
-  items: SearchResultItem[],
-  catalogType: 'MOVIE' | 'SERIES' | 'ANIME'
-): SearchResultItem[] {
-  // For SERIES search results, exclude items that are actually anime
-  if (catalogType === 'SERIES') {
-    return items.filter(item => {
-      const itemType = (item.type || '').toLowerCase();
-      // If the search API says it's an anime, exclude it from SERIES results
-      return itemType !== 'anime';
-    });
-  }
-  return items;
-}
 
