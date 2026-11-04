@@ -24,11 +24,15 @@ jobs:
           corepack enable
           corepack prepare yarn@stable --activate
 
+      - name: Remove package-lock.json (yarn project)
+        run: rm -f package-lock.json
+
       - name: Setup EAS
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
+          expo-version: 58
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -40,6 +44,8 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+        env:
+          EXPO_NO_DOCTOR: 1
 
       - name: Build Android
         run: eas build --platform android --profile production --non-interactive
