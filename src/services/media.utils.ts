@@ -29,9 +29,12 @@ function completenessScore(item: MediaItem): number {
  * Deduplicate a list of MediaItem entries.
  *
  * Strategy:
- * 1. Group by a deduplication key (slug if available, otherwise provider + externalId + type + title).
- * 2. Within each group, keep the entry with the highest completeness score.
- * 3. Return the deduplicated array, preserving the first-seen order.
+ * 1. Group by a deduplication key (slug if available, otherwise provider + type + cleanTitle).
+ * 2. The title is cleaned (season/episode suffixes removed) so that "Beauty in Black - Saison 1" and
+ *    "Beauty in Black - Saison 2" are grouped together.
+ * 3. externalId is excluded from the key because each season may have a different ID.
+ * 4. Within each group, keep the entry with the highest completeness score.
+ * 5. Return the deduplicated array, preserving the first-seen order.
  */
 export function deduplicateMediaItems(items: MediaItem[]): MediaItem[] {
   const seen = new Map<string, MediaItem>();
@@ -42,11 +45,15 @@ export function deduplicateMediaItems(items: MediaItem[]): MediaItem[] {
     if (item.slug) {
       key = `slug-${item.slug}`;
     } else {
+      // Utilise le titre nettoyé (sans "Saison X", "Épisode X", etc.) pour regrouper
+      // les différentes saisons/épisodes d'un même titre en une seule entrée.
+      // L'externalId est exclu car chaque saison peut avoir un ID différent
+      // (ex: "Beauty in Black - Saison 1" ≠ "Beauty in Black - Saison 2").
+      const clean = cleanTitle(item.title).toLowerCase().trim();
       const parts = [
         item.provider ?? '',
-        item.externalId ?? '',
         item.type,
-        item.title.toLowerCase().trim(),
+        clean,
       ];
       key = `composite-${parts.join('|')}`;
     }
