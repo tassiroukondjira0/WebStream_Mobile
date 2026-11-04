@@ -51,5 +51,8 @@
     "web": "expo start --web",
     "lint": "expo lint"
   },
+  "overrides": {
+    "resolve": "1.22.8"
+  },
   "private": true
 }
