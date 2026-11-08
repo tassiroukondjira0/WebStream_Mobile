@@ -10,7 +10,8 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, pass: string) => Promise<void>;
-  register: (name: string, email: string, pass: string) => Promise<void>;
+  loginRaw: (email: string, pass: string) => Promise<any>;
+  register: (name: string, email: string, pass: string, country: string, phoneNumber: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(savedUser);
           } else {
             // Fallback si les données utilisateur ne sont pas disponibles
-            setUser({ id: 'unknown', email: '', name: 'Utilisateur', role: 'USER' });
+            setUser({ id: 'unknown', email: '', name: 'Utilisateur', country: null, phoneNumber: null, role: 'USER', emailVerified: false });
           }
         }
       } catch (err) {
@@ -82,10 +83,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (name: string, email: string, pass: string) => {
+  // Exposer le type pour que le login puisse détecter emailVerified
+  const loginRaw = async (email: string, pass: string) => {
     setIsLoading(true);
     try {
-      const res = await Api.register(name, email, pass);
+      const res = await Api.loginRaw(email, pass);
+      // Si la connexion réussit, on met à jour le contexte avec les données utilisateur
+      if (res.ok && res.user) {
+        setUser(res.user);
+        await saveUser(res.user);
+      }
+      setIsLoading(false);
+      return res;
+    } catch (err) {
+      setIsLoading(false);
+      throw err;
+    }
+  };
+
+  const register = async (name: string, email: string, pass: string, country: string, phoneNumber: string) => {
+    setIsLoading(true);
+    try {
+      const res = await Api.register(name, email, pass, country, phoneNumber);
       if (res.user) {
         setUser(res.user);
         await saveUser(res.user);
@@ -104,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = user !== null;
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, isAuthenticated, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, isAuthenticated, login, loginRaw, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

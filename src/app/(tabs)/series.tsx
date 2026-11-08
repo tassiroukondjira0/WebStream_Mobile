@@ -12,6 +12,7 @@ import { deduplicateMediaItems } from '@/services/media.utils';
 import { getCatalogCached, clearCacheForType } from '@/services/media.cache';
 import { MediaItem } from '@/types/media';
 import { MediaRow } from '@/components/MediaRow';
+import { GenreChips } from '@/components/GenreChips';
 import { colors } from '@/theme/theme';
 
 const ITEMS_PER_CATEGORY = 12;
@@ -36,6 +37,7 @@ export default function SeriesScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [categories, setCategories] = useState<Record<string, MediaItem[]>>({});
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const initialLoaded = useRef(false);
 
   const loadSeries = useCallback(async () => {
@@ -105,6 +107,9 @@ export default function SeriesScreen() {
     >
       <Text style={styles.pageTitle}>Catalogue des Séries</Text>
       <Text style={styles.pageSubtitle}>Découvrez les meilleures séries en streaming.</Text>
+
+      {/* Genre chips — filtres par genre */}
+      <GenreChips selectedGenre={selectedGenre} onSelect={setSelectedGenre} />
 
       {SERIES_CATEGORIES.map((cat) => (
         <MediaRow

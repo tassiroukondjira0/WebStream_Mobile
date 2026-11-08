@@ -2,6 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import {
   CatalogResponse,
   MediaItem,
+  MediaPlaybackResponse,
   MediaSourcesResponse,
   SearchResultItem,
   User,
@@ -236,6 +237,12 @@ export const Api = {
     return request<CatalogResponse>(`/api/catalog?type=${type}&page=${page}&limit=${limit}`);
   },
 
+  // Titres tendance — "À la une" (films + séries + animes, triés par popularité et date de sortie)
+  async getTrending(limit: number = 30): Promise<MediaItem[]> {
+    const data = await request<{ items: MediaItem[] }>(`/api/catalog/trending?limit=${limit}`);
+    return data.items ?? [];
+  },
+
   // Recherche — retourne SearchResultItem[] (format legacy, utilisé par le site web)
   async search(query: string, limit: number = 20): Promise<{ results: SearchResultItem[] }> {
     const encoded = encodeURIComponent(query);
@@ -273,6 +280,25 @@ export const Api = {
     );
   },
 
+  // Playback complet — données de lecture (Vidzy + partenaires + TMDB épisodes)
+  async getMediaPlayback(params: {
+    tmdbId: string;
+    type: 'movie' | 'tv';
+    title?: string;
+    year?: number | null;
+    season?: number | null;
+  }): Promise<MediaPlaybackResponse> {
+    const qs = new URLSearchParams({
+      tmdbId: params.tmdbId,
+      type: params.type,
+    });
+    if (params.title) qs.set('title', params.title);
+    if (params.year) qs.set('year', String(params.year));
+    if (params.season) qs.set('season', String(params.season));
+
+    return request<MediaPlaybackResponse>(`/api/media-playback?${qs.toString()}`);
+  },
+
   // Authentification
   async login(email: string, password: string): Promise<{ success: boolean; user: User; token: string }> {
     const data = await request<{ success: boolean; user: User; token: string }>('/api/auth/login', {
@@ -285,10 +311,32 @@ export const Api = {
     return data;
   },
 
-  async register(name: string, email: string, password: string): Promise<{ success: boolean; user: User; token: string }> {
+  // Version brute du login qui retourne la réponse complète (pour détecter emailVerified: false)
+  async loginRaw(email: string, password: string): Promise<any> {
+    const baseUrl = getBaseApiUrl();
+    const token = await getAuthToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(`${baseUrl}/api/auth/login`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await response.json();
+    if (response.ok && data.token) {
+      await setAuthToken(data.token);
+    }
+    return { ok: response.ok, status: response.status, ...data };
+  },
+
+  async register(name: string, email: string, password: string, country: string, phoneNumber: string): Promise<{ success: boolean; user: User; token: string }> {
     const data = await request<{ success: boolean; user: User; token: string }>('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, country, phoneNumber }),
     });
     if (data.token) {
       await setAuthToken(data.token);
@@ -297,6 +345,12 @@ export const Api = {
   },
 
   async logout(): Promise<void> {
+    // Invalider le token côté serveur (ignorer les erreurs — on supprime localement de toute façon)
+    try {
+      await request<void>('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // Ignorer — le token sera supprimé localement
+    }
     await removeAuthToken();
   },
 
@@ -354,5 +408,56 @@ export const Api = {
         confirmPassword: newPassword,
       }),
     });
+  },
+
+  // Récupération du synopsis depuis TMDB par titre
+  async getMediaOverview(title: string): Promise<{ overview: string | null }> {
+    const encoded = encodeURIComponent(title);
+    return request<{ overview: string | null }>(`/api/media-overview?title=${encoded}`);
+  },
+
+  // Vérification email
+  async verifyEmail(email: string, code: string): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>('/api/auth/verify', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    });
+  },
+
+  async resendVerificationCode(email: string): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>('/api/auth/verify', {
+      method: 'PUT',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  // Réinitialisation du mot de passe
+  async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  async resetPassword(email: string, code: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, code, newPassword }),
+    });
+  },
+
+  // Vérifier s'il y a un nouveau build disponible (endpoint public, pas d'auth requise)
+  async checkLatestBuild(): Promise<{
+    hasNewBuild: boolean;
+    latestBuild: { type: 'eas' | 'local'; buildDate: string; downloadUrl: string; size?: number } | null;
+  }> {
+    const baseUrl = getBaseApiUrl();
+    const response = await fetch(`${baseUrl}/api/latest-build`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      return { hasNewBuild: false, latestBuild: null };
+    }
+    return response.json();
   },
 };

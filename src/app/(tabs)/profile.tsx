@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import {
@@ -21,6 +22,7 @@ import {
   Trash2,
   ChevronRight,
   Sparkles,
+  Info,
 } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
@@ -28,6 +30,7 @@ import { colors } from '@/theme/theme';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, isAuthenticated, logout } = useAuth();
   const { unreadCount } = useNotifications();
 
@@ -58,11 +61,15 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Text style={styles.headerTitle}>Mon Profil</Text>
       </View>
 
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
+        showsVerticalScrollIndicator={false}
+      >
         {!isAuthenticated ? (
           /* Non connecté — proposer Connexion / Inscription */
           <View style={styles.authPrompt}>
@@ -114,6 +121,15 @@ export default function ProfileScreen() {
             {/* Menu items */}
             <View style={styles.menuSection}>
               <Text style={styles.menuSectionTitle}>Mon compte</Text>
+
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => router.push('/profile/info' as any)}
+                activeOpacity={0.7}>
+                <Info color={colors.textSecondary} size={20} />
+                <Text style={styles.menuItemText}>Mes informations</Text>
+                <ChevronRight color={colors.textTertiary} size={16} />
+              </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.menuItem}
@@ -210,7 +226,6 @@ const styles = StyleSheet.create({
   },
   /* Auth prompt */
   authPrompt: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,

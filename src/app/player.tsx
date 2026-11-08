@@ -11,7 +11,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { WebView } from 'react-native-webview';
-import { ArrowLeft, Check, RefreshCw, Server, Volume2 } from 'lucide-react-native';
+import { ArrowLeft, BookOpen, Check, RefreshCw, Server, Volume2 } from 'lucide-react-native';
 import { Api, getBaseApiUrl, resolveApiUrl } from '@/services/api';
 import { cleanTitle } from '@/services/media.utils';
 import { MediaSourceItem } from '@/types/media';
@@ -24,41 +24,6 @@ type ResolvedSources = {
   activeUrl: string | null;
   error: string | null;
 };
-
-type EmbedDoc = { url: string; html: string | null };
-
-const NO_REFERRER_META = '<meta name="referrer" content="no-referrer">';
-
-function isEmbedDocumentUrl(url: string): boolean {
-  try {
-    const target = new URL(url);
-    const base = new URL(getBaseApiUrl());
-
-    return (
-        target.host.toLowerCase() === base.host.toLowerCase() &&
-        target.pathname.startsWith('/api/embed')
-    );
-  } catch {
-    return false;
-  }
-}
-
-function withNoReferrerPolicy(html: string): string {
-  const existing = /<meta[^>]+name=["']referrer["'][^>]*>/i;
-
-  if (existing.test(html)) {
-    return html.replace(existing, NO_REFERRER_META);
-  }
-
-  if (/<head[^>]*>/i.test(html)) {
-    return html.replace(
-        /<head[^>]*>/i,
-        (head) => `${head}${NO_REFERRER_META}`
-    );
-  }
-
-  return `${NO_REFERRER_META}${html}`;
-}
 
 export default function PlayerScreen() {
   const router = useRouter();
@@ -85,8 +50,8 @@ export default function PlayerScreen() {
   const [activeUrl, setActiveUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [embedDoc, setEmbedDoc] = useState<EmbedDoc | null>(null);
   const [reloadCount, setReloadCount] = useState(0);
+  const [synopsis, setSynopsis] = useState<string | null>(null);
 
   const mediaType = (params.type || 'movie').toLowerCase();
 
@@ -209,11 +174,10 @@ export default function PlayerScreen() {
     }
   }, [
     params.streamUrl,
-    params.id,
-    params.tmdbId,
     params.provider,
     params.title,
-    isSeries,
+    mediaType,
+    targetId,
   ]);
 
   // Application des sources récupérées
@@ -221,7 +185,6 @@ export default function PlayerScreen() {
     setSources(result.sources);
     setError(result.error);
     setActiveUrl(result.activeUrl);
-    setEmbedDoc(null);
 
     const first = result.sources[0];
 
@@ -239,7 +202,6 @@ export default function PlayerScreen() {
   const reload = useCallback(() => {
     setLoading(true);
     setError(null);
-    setEmbedDoc(null);
 
     setReloadCount((count) => count + 1);
 
@@ -266,57 +228,27 @@ export default function PlayerScreen() {
     };
   }, [resolveSources, applySources]);
 
-  // Chargement des documents d'embed de notre API
+  // Charge le synopsis depuis TMDB
   useEffect(() => {
-    const url = activeUrl;
-
-    if (!url || isDirect || !isEmbedDocumentUrl(url)) {
-      return;
-    }
+    if (!params.title) return;
 
     let cancelled = false;
-
-    const controller = new AbortController();
-
-    const timer = setTimeout(() => {
-      controller.abort();
-    }, 15000);
-
-    void (async () => {
+    (async () => {
       try {
-        const res = await fetch(url, {
-          headers: {
-            Accept: 'text/html',
-          },
-          signal: controller.signal,
-        });
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
+        const cleaned = cleanTitle(params.title);
+        const { overview } = await Api.getMediaOverview(cleaned);
+        if (!cancelled && overview) {
+          setSynopsis(overview);
         }
-
-        const html = withNoReferrerPolicy(await res.text());
-
-        if (!cancelled) {
-          setEmbedDoc({ url, html });
-        }
-      } catch (err) {
-        console.warn('Erreur chargement embed :', err);
-
-        if (!cancelled) {
-          setEmbedDoc({ url, html: null });
-        }
-      } finally {
-        clearTimeout(timer);
+      } catch {
+        // Silencieux : pas de synopsis affiché
       }
     })();
 
     return () => {
       cancelled = true;
-      clearTimeout(timer);
-      controller.abort();
     };
-  }, [activeUrl, isDirect, reloadCount]);
+  }, [params.title]);
 
   // Langues disponibles
   const availableLangs = useMemo(() => {
@@ -423,7 +355,6 @@ export default function PlayerScreen() {
   const handleSelectHost = (source: MediaSourceItem) => {
     setSelectedHost(source.host);
     setActiveUrl(source.url);
-    setEmbedDoc(null);
   };
 
   // Changement d'épisode
@@ -438,7 +369,6 @@ export default function PlayerScreen() {
     if (target) {
       setSelectedHost(target.host);
       setActiveUrl(target.url);
-      setEmbedDoc(null);
     }
   };
 
@@ -533,6 +463,21 @@ export default function PlayerScreen() {
             style={styles.controlsScroll}
             showsVerticalScrollIndicator={false}
         >
+          {/* Synopsis */}
+          {synopsis && (
+              <View style={styles.controlSection}>
+                <View style={styles.sectionHeader}>
+                  <BookOpen color="#a1a1aa" size={16} />
+                  <Text style={styles.sectionTitle}>
+                    Synopsis
+                  </Text>
+                </View>
+                <Text style={styles.synopsisText} numberOfLines={10}>
+                  {synopsis}
+                </Text>
+              </View>
+          )}
+
           {/* Langues */}
           {availableLangs.length > 1 && (
               <View style={styles.controlSection}>
@@ -784,6 +729,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
+    paddingBottom: 32,
   },
   controlSection: {
     marginBottom: 20,
@@ -800,6 +746,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  synopsisText: {
+    color: '#a1a1aa',
+    fontSize: 14,
+    lineHeight: 20,
   },
   pillsRow: {
     flexDirection: 'row',

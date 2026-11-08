@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppNotification } from '@/types/media';
 import { getBaseApiUrl } from '@/services/api';
@@ -56,16 +57,31 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
         return null;
       }
 
-      // Sur Expo Go, on utilise devicePushToken ; sur un build, on utilise registerForPushNotificationsAsync
+      // Récupérer le projectId depuis app.json (extra.eas.projectId)
+      const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+      if (!projectId) {
+        console.warn('projectId introuvable dans app.json : les push notifications EAS ne fonctionneront pas.');
+        return null;
+      }
+
+      // Sur un development build, on utilise getExpoPushTokenAsync avec le projectId
       try {
         const pushToken = await Notifications.getExpoPushTokenAsync({
-          projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID ?? '',
+          projectId,
         });
         token = pushToken.data;
-      } catch {
-        // Fallback pour Expo Go sans projectId
-        const pushToken = await Notifications.getDevicePushTokenAsync();
-        token = pushToken.data;
+      } catch (e) {
+        const errorMsg = String(e || '');
+        if (errorMsg.includes('Firebase') || errorMsg.includes('FCM') || errorMsg.includes('googleServicesFile')) {
+          // Firebase non configuré : les push notifications ne fonctionneront pas sans google-services.json
+          console.warn(
+            'Firebase non configuré : les push notifications sont désactivées. ' +
+            'Configure google-services.json dans app.json pour les activer. ' +
+            'Voir : https://docs.expo.dev/push-notifications/fcm-credentials/'
+          );
+        } else {
+          console.error('Erreur inscription push (EAS) :', e);
+        }
       }
 
       await AsyncStorage.setItem(DEVICE_TOKEN_KEY, token || '');

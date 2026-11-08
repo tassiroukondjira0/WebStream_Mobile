@@ -2,7 +2,7 @@
   "expo": {
     "name": "CinéMax",
     "slug": "cinemax-mobile",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "cinemax",
@@ -16,6 +16,7 @@
     },
     "android": {
       "package": "com.cinemax.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#09090b",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -37,6 +38,13 @@
       ],
       "expo-video",
       "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": null,
+          "color": "#09090b"
+        }
+      ],
       "./plugins/withCmakeObjectPathMax"
     ],
     "experiments": {

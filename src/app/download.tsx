@@ -1,15 +1,66 @@
-import React from 'react';
-import { Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Download, Smartphone } from 'lucide-react-native';
-import { Link } from 'expo-router';
+import { Download, Smartphone, Cloud, HardDrive } from 'lucide-react-native';
+import { getBaseApiUrl } from '../services/api';
 
-// Lien direct vers le build APK sur EAS
-const APK_DOWNLOAD_URL =
-  'https://expo.dev/accounts/tassirou/projects/cinemax-mobile/builds/050909d7-d764-4e20-aec1-e375e96446ca';
+interface BuildInfo {
+  type: 'local' | 'eas';
+  buildDate: string;
+  size: number;
+  downloadUrl: string;
+}
 
 export default function DownloadScreen() {
   const isWeb = Platform.OS === 'web';
+  const [builds, setBuilds] = useState<BuildInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchBuilds = useCallback(async () => {
+    try {
+      const res = await fetch(`${getBaseApiUrl()}/api/app-apk`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.builds && Array.isArray(data.builds)) {
+          setBuilds(data.builds);
+        }
+      }
+    } catch {
+      // API non disponible
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch from external API
+    fetchBuilds();
+  }, [fetchBuilds]);
+
+  const handleDownload = useCallback((build: BuildInfo) => {
+    if (build.type === 'local') {
+      Linking.openURL(`${getBaseApiUrl()}/api/app-apk/download`);
+    } else {
+      Linking.openURL(build.downloadUrl);
+    }
+  }, []);
+
+  const formatBuildDate = (isoDate: string) => {
+    const date = new Date(isoDate);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const formatSize = (bytes: number) => {
+    if (bytes === 0) return '';
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(1)} Mo`;
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -30,35 +81,58 @@ export default function DownloadScreen() {
           <FeatureItem emoji="❤️" text="Favorites et wishlist" />
         </View>
 
-        {isWeb ? (
-          <View style={styles.downloadBox}>
-            <Text style={styles.downloadText}>
-              📱 Version Android disponible
-            </Text>
-            <Link href={APK_DOWNLOAD_URL} target="_blank" asChild>
-              <TouchableOpacity style={styles.downloadButton}>
-                <Download size={20} color="#fff" />
-                <Text style={styles.downloadButtonText}>Télécharger l&#39;APK</Text>
-              </TouchableOpacity>
-            </Link>
-            <Text style={styles.versionInfo}>Version 1.0.0 • Android</Text>
-          </View>
-        ) : (
-          <View style={styles.downloadBox}>
-            <Text style={styles.downloadText}>
-              📱 Vous utilisez déjà l&#39;application mobile !
-            </Text>
-            <TouchableOpacity
-              style={styles.downloadButton}
-              onPress={() => {
-                Linking.openURL(APK_DOWNLOAD_URL);
-              }}>
-              <Download size={20} color="#fff" />
-              <Text style={styles.downloadButtonText}>Partager le lien de téléchargement</Text>
-            </TouchableOpacity>
-            <Text style={styles.versionInfo}>Version 1.0.0 • Android</Text>
-          </View>
-        )}
+        <View style={styles.downloadStack}>
+          <Text style={styles.downloadText}>
+            {isWeb ? '📱 Version Android disponible' : '📱 Vous utilisez déjà l&#39;application mobile !'}
+          </Text>
+
+          {loading ? (
+            <View style={[styles.downloadBox, styles.buildBoxLoading]}>
+              <ActivityIndicator color="#a1a1aa" />
+              <Text style={styles.localNote}>Recherche du dernier build...</Text>
+            </View>
+          ) : builds.length === 0 ? (
+            <View style={styles.downloadBox}>
+              <Text style={styles.localNote}>
+                Aucun build disponible pour le moment.
+              </Text>
+            </View>
+          ) : (
+            (() => {
+              const build = builds[0];
+              const isEas = build.type === 'eas';
+              return (
+                <View style={styles.downloadBox}>
+                  <View style={styles.buildHeader}>
+                    {isEas ? (
+                      <Cloud size={16} color="#a1a1aa" />
+                    ) : (
+                      <HardDrive size={16} color="#a1a1aa" />
+                    )}
+                    <Text style={styles.buildLabel}>
+                      {isEas ? 'Build Cloud EAS' : 'Build Local'}
+                    </Text>
+                  </View>
+                  <Text style={styles.buildDate}>
+                    Construit le {formatBuildDate(build.buildDate)}
+                  </Text>
+                  <Text style={styles.versionInfo}>
+                    Version 1.0.0 • Android{formatSize(build.size) ? ` • ${formatSize(build.size)}` : ''}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.downloadButton}
+                    onPress={() => handleDownload(build)}
+                    activeOpacity={0.7}>
+                    <Download size={20} color="#fff" />
+                    <Text style={styles.downloadButtonText}>
+                      {isEas ? 'Télécharger depuis le cloud' : 'Télécharger le build local'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })()
+          )}
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -122,14 +196,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#d4d4d8',
   },
-  downloadBox: {
+  downloadStack: {
     width: '100%',
     maxWidth: 400,
+    gap: 16,
+  },
+  downloadBox: {
+    width: '100%',
     alignItems: 'center',
     padding: 24,
     backgroundColor: '#18181b',
     borderRadius: 12,
     gap: 12,
+  },
+  buildBoxLoading: {
+    justifyContent: 'center',
+    paddingVertical: 32,
+  },
+  buildHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  buildLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#a1a1aa',
+  },
+  buildDate: {
+    fontSize: 13,
+    color: '#71717a',
+    fontStyle: 'italic',
+  },
+  localNote: {
+    fontSize: 12,
+    color: '#52525b',
+    textAlign: 'center',
   },
   downloadText: {
     fontSize: 16,

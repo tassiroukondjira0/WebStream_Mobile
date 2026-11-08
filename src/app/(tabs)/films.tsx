@@ -12,6 +12,7 @@ import { deduplicateMediaItems } from '@/services/media.utils';
 import { getCatalogCached, clearCacheForType } from '@/services/media.cache';
 import { MediaItem } from '@/types/media';
 import { MediaRow } from '@/components/MediaRow';
+import { GenreChips } from '@/components/GenreChips';
 import { colors } from '@/theme/theme';
 
 const ITEMS_PER_CATEGORY = 12;
@@ -40,6 +41,7 @@ export default function FilmsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [categories, setCategories] = useState<Record<string, MediaItem[]>>({});
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const initialLoaded = useRef(false);
 
   const loadFilms = useCallback(async () => {
@@ -110,6 +112,9 @@ export default function FilmsScreen() {
     >
       <Text style={styles.pageTitle}>Catalogue des Films</Text>
       <Text style={styles.pageSubtitle}>Regardez des films complets en haute qualité.</Text>
+
+      {/* Genre chips — filtres par genre */}
+      <GenreChips selectedGenre={selectedGenre} onSelect={setSelectedGenre} />
 
       {FILM_CATEGORIES.map((cat) => (
         <MediaRow
