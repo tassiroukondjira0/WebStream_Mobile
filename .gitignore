@@ -51,3 +51,7 @@ example
 credentials.json
 *.keystore
 
+# Firebase config (contains API keys)
+google-services.json
+GoogleService-Info.plist
+
