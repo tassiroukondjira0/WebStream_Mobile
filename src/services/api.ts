@@ -460,4 +460,31 @@ export const Api = {
     }
     return response.json();
   },
+
+  // Réveiller le serveur Render (endpoint public, pas d'auth requise)
+  // Retourne true si le serveur répond, false après épuisement des retries
+  // Utilise /api/catalog car /api/health n'est pas implémenté côté serveur
+  async wakeServer(maxRetries: number = 5): Promise<boolean> {
+    const baseUrl = getBaseApiUrl();
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+        const res = await fetch(`${baseUrl}/api/catalog?type=MOVIE&page=1&limit=1`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) return true;
+      } catch {
+        // Serveur encore en veille ou indisponible — on retry
+      }
+      // Délai exponentiel : 3s, 6s, 9s, 12s, 15s
+      await new Promise((resolve) => setTimeout(resolve, 3000 * (i + 1)));
+    }
+    return false;
+  },
 };

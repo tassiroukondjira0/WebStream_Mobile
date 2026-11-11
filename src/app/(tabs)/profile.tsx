@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
+import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import {
   Bell,
@@ -196,6 +197,11 @@ export default function ProfileScreen() {
                 <Text style={styles.menuItemText}>Vider le cache</Text>
                 <ChevronRight color={colors.textTertiary} size={16} />
               </TouchableOpacity>
+            </View>
+
+            {/* App version */}
+            <View style={styles.versionSection}>
+              <Text style={styles.versionText}>CinéMax v{Constants.expoConfig?.version ?? '1.0.0'}</Text>
             </View>
           </>
         )}
@@ -385,5 +391,14 @@ const styles = StyleSheet.create({
     color: colors.primaryForeground,
     fontSize: 9,
     fontWeight: '700',
+  },
+  /* Version footer */
+  versionSection: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  versionText: {
+    color: colors.textTertiary,
+    fontSize: 12,
   },
 });

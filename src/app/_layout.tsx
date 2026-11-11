@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, router } from 'expo-router';
@@ -15,10 +15,50 @@ const LAST_BUILD_DATE_KEY = '@cinemax_last_build_date';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [isWakingServer, setIsWakingServer] = useState(true);
+
+  // Réveiller le serveur Render au démarrage
   useEffect(() => {
-    // Masquer le splash screen une fois prêt
-    SplashScreen.hideAsync().catch(() => {});
+    let cancelled = false;
+    const wakeUp = async () => {
+      try {
+        const woke = await Api.wakeServer(5);
+        if (!cancelled) {
+          setIsWakingServer(false);
+          SplashScreen.hideAsync().catch(() => {});
+        }
+        if (!woke) {
+          console.warn('Le serveur Render n\'a pas répondu après plusieurs tentatives.');
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setIsWakingServer(false);
+          SplashScreen.hideAsync().catch(() => {});
+        }
+        console.warn('Erreur lors du réveil du serveur:', e);
+      }
+    };
+
+    wakeUp();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  // Ping périodique pour maintenir le serveur éveillé (toutes les 10 minutes)
+  useEffect(() => {
+    if (isWakingServer) return;
+
+    const interval = setInterval(async () => {
+      try {
+        await Api.wakeServer(1);
+      } catch {
+        // Ignorer les erreurs de keep-alive
+      }
+    }, 10 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [isWakingServer]);
 
   // Vérifier s'il y a un nouveau build disponible au démarrage
   useEffect(() => {
