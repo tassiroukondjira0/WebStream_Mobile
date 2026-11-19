@@ -48,11 +48,26 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const initialLoad = useRef(true);
 
-  // Charger les notifications au démarrage
+  // Charger les notifications au démarrage + récupérer la dernière notification tapée
   useEffect(() => {
     if (initialLoad.current) {
       initialLoad.current = false;
-      loadNotifications();
+      (async () => {
+        // Récupère la dernière notification sur laquelle l'utilisateur a appuyé
+        // (cas où l'app était fermée et l'utilisateur a tapé une notification)
+        const lastResponse = await Notifications.getLastNotificationResponseAsync();
+        if (lastResponse?.notification) {
+          const { title, body, data } = lastResponse.notification.request.content;
+          await addNotification({
+            title: title || 'Annonce CinéMax',
+            body: body || '',
+            data: data as Record<string, string> | undefined,
+          });
+        }
+        // Rafraîchir depuis le serveur pour synchroniser les notifications
+        await fetchServerNotifications();
+        await loadNotifications();
+      })();
     }
   }, [loadNotifications]);
 
@@ -70,7 +85,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     };
   }, []);
 
-  // Écouter les notifications push entrantes
+  // Écouter les notifications push entrantes (app en premier plan)
   useEffect(() => {
     const subscription = Notifications.addNotificationReceivedListener((notification) => {
       const { title, body, data } = notification.request.content;
@@ -84,7 +99,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     // Écouter quand l'utilisateur appuie sur une notification
     const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      // Si l'utilisateur appuie, on marque comme lue automatiquement
+      const { title, body, data } = response.notification.request.content;
+      // Ajouter la notification si elle n'existe pas déjà (cas arrière-plan)
+      addNotification({
+        title: title || 'Annonce CinéMax',
+        body: body || '',
+        data: data as Record<string, string> | undefined,
+      });
+      // Marquer comme lue
       const notifId = response.notification.request.identifier;
       markAsRead(notifId);
       loadNotifications();

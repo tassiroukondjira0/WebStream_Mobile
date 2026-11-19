@@ -1,5 +1,15 @@
 import * as SecureStore from 'expo-secure-store';
 import {
+  AdminMediaItem,
+  AdminMediaListResponse,
+  AdminNotificationPayload,
+  AdminNotificationResponse,
+  AdminProviderAssetListResponse,
+  AdminReview,
+  AdminStatsResponse,
+  AdminSyncReport,
+  AdminSyncState,
+  AdminUser,
   CatalogResponse,
   MediaItem,
   MediaPlaybackResponse,
@@ -486,5 +496,178 @@ export const Api = {
       await new Promise((resolve) => setTimeout(resolve, 3000 * (i + 1)));
     }
     return false;
+  },
+
+  // ─── Super Admin API ───
+
+  // Dashboard stats
+  async getAdminStats(): Promise<AdminStatsResponse> {
+    return request<AdminStatsResponse>('/api/admin/stats');
+  },
+
+  // Users management
+  async getAdminUsers(): Promise<{ users: AdminUser[] }> {
+    return request<{ users: AdminUser[] }>('/api/admin/users');
+  },
+
+  async changeUserRole(userId: string, role: 'USER' | 'SUBSCRIBER' | 'ADMIN'): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>('/api/admin/users/role', {
+      method: 'PATCH',
+      body: JSON.stringify({ userId, role }),
+    });
+  },
+
+  // Media management
+  async getAdminMedias(page: number = 1, pageSize: number = 24, q?: string): Promise<AdminMediaListResponse> {
+    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (q) params.set('q', q);
+    return request<AdminMediaListResponse>(`/api/admin/medias?${params.toString()}`);
+  },
+
+  async createAdminMedia(media: Omit<AdminMediaItem, 'id'>): Promise<{ success: boolean; media: AdminMediaItem }> {
+    return request<{ success: boolean; media: AdminMediaItem }>('/api/admin/medias', {
+      method: 'POST',
+      body: JSON.stringify(media),
+    });
+  },
+
+  async updateAdminMedia(id: string, data: Partial<AdminMediaItem>): Promise<{ success: boolean; media: AdminMediaItem }> {
+    return request<{ success: boolean; media: AdminMediaItem }>(`/api/admin/medias/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteAdminMedia(id: string): Promise<{ success: boolean }> {
+    return request<{ success: boolean }>(`/api/admin/medias/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Reviews management
+  async getAdminReviews(slug?: string): Promise<{ reviews: AdminReview[] }> {
+    const qs = slug ? `?slug=${encodeURIComponent(slug)}` : '';
+    return request<{ reviews: AdminReview[] }>(`/api/admin/reviews${qs}`);
+  },
+
+  async deleteAdminReview(id: string): Promise<{ success: boolean }> {
+    return request<{ success: boolean }>('/api/admin/reviews', {
+      method: 'DELETE',
+      body: JSON.stringify({ id }),
+    });
+  },
+
+  // Notifications
+  async sendAdminNotification(payload: AdminNotificationPayload): Promise<AdminNotificationResponse> {
+    return request<AdminNotificationResponse>('/api/admin/notifications', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  // Provider assets
+  async getProviderAssets(
+    page: number = 1,
+    pageSize: number = 24,
+    provider?: string,
+    q?: string
+  ): Promise<AdminProviderAssetListResponse> {
+    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (provider) params.set('provider', provider);
+    if (q) params.set('q', q);
+    return request<AdminProviderAssetListResponse>(`/api/admin/provider-assets?${params.toString()}`);
+  },
+
+  async toggleProviderAssetPublished(id: string): Promise<{ success: boolean; item: { id: string; isPublished: boolean; title: string } }> {
+    return request<{ success: boolean; item: { id: string; isPublished: boolean; title: string } }>('/api/admin/provider-assets', {
+      method: 'PATCH',
+      body: JSON.stringify({ id }),
+    });
+  },
+
+  // Sync — TMDB
+  async getTmdbSyncState(): Promise<AdminSyncState> {
+    return request<AdminSyncState>('/api/admin/sync/tmdb');
+  },
+
+  async runTmdbSync(pages: number = 2): Promise<AdminSyncReport> {
+    return request<AdminSyncReport>('/api/admin/sync/tmdb', {
+      method: 'POST',
+      body: JSON.stringify({ pages }),
+    });
+  },
+
+  // Sync — Partner
+  async getPartnerSyncState(): Promise<AdminSyncState> {
+    return request<AdminSyncState>('/api/admin/sync/partner');
+  },
+
+  async runPartnerSync(pages: number = 2): Promise<AdminSyncReport> {
+    return request<AdminSyncReport>('/api/admin/sync/partner', {
+      method: 'POST',
+      body: JSON.stringify({ pages }),
+    });
+  },
+
+  // Sync — FStreamTV
+  async getFStreamSyncState(): Promise<AdminSyncState> {
+    return request<AdminSyncState>('/api/admin/sync/fstreamtv');
+  },
+
+  async runFStreamSync(pages: number = 2): Promise<AdminSyncReport> {
+    return request<AdminSyncReport>('/api/admin/sync/fstreamtv', {
+      method: 'POST',
+      body: JSON.stringify({ pages }),
+    });
+  },
+
+  // Sync — Platforms
+  async getPlatformSyncState(): Promise<AdminSyncState> {
+    return request<AdminSyncState>('/api/admin/sync/platforms');
+  },
+
+  async runPlatformSync(pages: number = 3, platforms?: string[]): Promise<AdminSyncReport> {
+    return request<AdminSyncReport>('/api/admin/sync/platforms', {
+      method: 'POST',
+      body: JSON.stringify({ pages, platforms }),
+    });
+  },
+
+  // Sync — Targeted
+  async runTargetedSync(titles?: string[], externalIds?: string[], search?: string): Promise<AdminSyncReport> {
+    return request<AdminSyncReport>('/api/admin/sync/targeted', {
+      method: 'POST',
+      body: JSON.stringify({ titles, externalIds, search }),
+    });
+  },
+
+  // Coverage pass
+  async runCoveragePass(checkVidzy: boolean = true): Promise<{ success: boolean; message: string; report: Record<string, unknown> }> {
+    return request<{ success: boolean; message: string; report: Record<string, unknown> }>('/api/admin/coverage', {
+      method: 'POST',
+      body: JSON.stringify({ checkVidzy }),
+    });
+  },
+
+  // Import — TMDB
+  async importTmdb(
+    type: 'movie' | 'tv',
+    pages: number = 2,
+    accessLevel: 'FREE' | 'PREMIUM' = 'FREE'
+  ): Promise<{ success: boolean; message: string; report: Record<string, unknown> }> {
+    return request<{ success: boolean; message: string; report: Record<string, unknown> }>('/api/admin/import/tmdb', {
+      method: 'POST',
+      body: JSON.stringify({ type, pages, accessLevel }),
+    });
+  },
+
+  // Import — Manual
+  async importManual(
+    items: Array<Record<string, unknown>>
+  ): Promise<{ success: boolean; message: string; report: Record<string, unknown> }> {
+    return request<{ success: boolean; message: string; report: Record<string, unknown> }>('/api/admin/import/manual', {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    });
   },
 };

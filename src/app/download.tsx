@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Constants from 'expo-constants';
+import { nativeApplicationVersion } from 'expo-application';
 import { Download, Smartphone, Cloud, HardDrive } from 'lucide-react-native';
 import { getBaseApiUrl } from '../services/api';
 
@@ -118,7 +118,7 @@ export default function DownloadScreen() {
                     Construit le {formatBuildDate(build.buildDate)}
                   </Text>
                   <Text style={styles.versionInfo}>
-                    Version {Constants.expoConfig?.version ?? '1.0.0'} • Android{formatSize(build.size) ? ` • ${formatSize(build.size)}` : ''}
+                    Version {nativeApplicationVersion ?? '1.0.0'} • Android{formatSize(build.size) ? ` • ${formatSize(build.size)}` : ''}
                   </Text>
                   <TouchableOpacity
                     style={styles.downloadButton}

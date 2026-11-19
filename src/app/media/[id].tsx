@@ -107,6 +107,25 @@ export default function MediaDetailScreen() {
   // ─── Détails TMDB des épisodes (optionnel, pour la liste) ───
   const [tmdbEpisodes, setTmdbEpisodes] = useState<PlaybackEpisode[]>([]);
 
+  // Force le rechargement des sources quand params.id change (navigation vers un autre média).
+  // Expo Router peut réutiliser le composant [id] avec un nouvel ID — dans ce cas les states
+  // ne sont pas réinitialisés et l'ancienne vidéo reste affichée.
+  const prevIdRef = React.useRef<string | undefined>(params.id);
+  useEffect(() => {
+    if (prevIdRef.current !== params.id) {
+      prevIdRef.current = params.id;
+      // Réinitialise les states pour éviter d'afficher les anciennes données
+      setSources([]);
+      setActiveUrl(null);
+      setSourcesLoading(true);
+      setSourcesError(null);
+      setTmdbEpisodes([]);
+      setSelectedLang('VF');
+      setSelectedSeason(1);
+      setSelectedEpisode(1);
+    }
+  }, [params.id]);
+
   // ─── Bookmarks ───
   useEffect(() => {
     if (!isAuthenticated || !bookmarkSlug) return;

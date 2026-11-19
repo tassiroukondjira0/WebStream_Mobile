@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
-import Constants from 'expo-constants';
+import { nativeApplicationVersion } from 'expo-application';
 import { useRouter } from 'expo-router';
 import {
   Bell,
@@ -24,6 +24,7 @@ import {
   ChevronRight,
   Sparkles,
   Info,
+  ShieldCheck,
 } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
@@ -185,6 +186,24 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* Super Admin section — visible only for SUPER_ADMIN / ADMIN */}
+            {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') && (
+              <View style={styles.menuSection}>
+                <Text style={styles.menuSectionTitle}>Administration</Text>
+
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() => router.push('/admin/dashboard' as any)}
+                  activeOpacity={0.7}>
+                  <ShieldCheck color={colors.warning} size={20} />
+                  <Text style={styles.menuItemText}>
+                    {user?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Administration'}
+                  </Text>
+                  <ChevronRight color={colors.textTertiary} size={16} />
+                </TouchableOpacity>
+              </View>
+            )}
+
             {/* Settings section */}
             <View style={styles.menuSection}>
               <Text style={styles.menuSectionTitle}>Paramètres</Text>
@@ -201,7 +220,7 @@ export default function ProfileScreen() {
 
             {/* App version */}
             <View style={styles.versionSection}>
-              <Text style={styles.versionText}>CinéMax v{Constants.expoConfig?.version ?? '1.0.0'}</Text>
+              <Text style={styles.versionText}>CinéMax v{nativeApplicationVersion ?? '1.0.0'}</Text>
             </View>
           </>
         )}

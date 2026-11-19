@@ -3,7 +3,7 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppNotification } from '@/types/media';
-import { getBaseApiUrl } from '@/services/api';
+import { getBaseApiUrl, getAuthToken } from '@/services/api';
 
 const NOTIFICATIONS_KEY = '@cinemax_notifications';
 const DEVICE_TOKEN_KEY = '@cinemax_device_token';
@@ -163,9 +163,14 @@ export async function getUnreadCount(): Promise<number> {
 export async function registerDeviceToken(token: string): Promise<void> {
   try {
     const baseUrl = getBaseApiUrl();
+    const authToken = await getAuthToken();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
     await fetch(`${baseUrl}/api/push-token`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ token }),
     });
   } catch (e) {
@@ -183,7 +188,12 @@ export async function registerDeviceToken(token: string): Promise<void> {
 export async function fetchServerNotifications(): Promise<AppNotification[]> {
   try {
     const baseUrl = getBaseApiUrl();
-    const res = await fetch(`${baseUrl}/api/notifications`);
+    const authToken = await getAuthToken();
+    const headers: Record<string, string> = {};
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    const res = await fetch(`${baseUrl}/api/notifications`, { headers });
     if (res.ok) {
       const data = await res.json();
       // Le backend retourne { notifications: [...], unread: number }

@@ -116,3 +116,122 @@ export interface MediaPlaybackResponse {
   seasons: PlaybackSeason[];
   episodes: PlaybackEpisode[];
 }
+
+// ─── Admin API types ───
+
+export interface AdminUser {
+  id: string;
+  name: string | null;
+  email: string;
+  role: 'USER' | 'SUBSCRIBER' | 'ADMIN' | 'SUPER_ADMIN';
+  createdAt: string;
+}
+
+export interface AdminStatsResponse {
+  success: boolean;
+  totals: {
+    totalUsers: number;
+    premiumUsers: number;
+    standardUsers: number;
+    totalViews: number;
+    monthViews: number;
+    partnerTotal: number;
+    partnerPublished: number;
+  };
+  viewsByMonth: { label: string; views: number }[];
+  signupsByMonth: { label: string; signups: number }[];
+  premiumSplit: { label: string; value: number }[];
+}
+
+export interface AdminMediaItem {
+  id: string;
+  title: string;
+  type: 'MOVIE' | 'SERIES' | 'ANIME';
+  posterUrl: string | null;
+  backdropUrl: string | null;
+  synopsis: string | null;
+  releaseYear: number | null;
+  durationMinutes: number | null;
+  videoUrl: string | null;
+  accessLevel: 'FREE' | 'PREMIUM';
+  isPublished: boolean;
+  categories: string[];
+  episodeSources: { season: number; episode: number; videoUrl: string }[];
+}
+
+export interface AdminMediaListResponse {
+  items: AdminMediaItem[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export interface AdminReview {
+  id: string;
+  mediaSlug: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+}
+
+export interface AdminProviderAsset {
+  id: string;
+  provider: string;
+  externalId: string;
+  contentType: 'MOVIE' | 'SERIES' | 'ANIME';
+  title: string;
+  releaseYear: number | null;
+  posterUrl: string | null;
+  isPublished: boolean;
+  trendingRank: number | null;
+}
+
+export interface AdminProviderAssetListResponse {
+  items: AdminProviderAsset[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export interface AdminSyncRun {
+  id: string;
+  status: string;
+  pagesFetched: number;
+  assetsUpserted: number;
+  assetsPruned: number;
+  error: string | null;
+  startedAt: string;
+  finishedAt: string | null;
+}
+
+export interface AdminSyncState {
+  success: boolean;
+  assets: Record<string, number>;
+  runs: AdminSyncRun[];
+}
+
+export interface AdminSyncReport {
+  success: boolean;
+  message: string;
+  report: Record<string, unknown>;
+}
+
+export interface AdminNotificationPayload {
+  title: string;
+  message: string;
+  link?: string | null;
+  target: 'ALL' | 'SUBSCRIBERS' | 'MOBILE_APP';
+  type: 'ANNONCE' | 'NOUVEAUTE';
+}
+
+export interface AdminNotificationResponse {
+  success: boolean;
+  count: number;
+  pushSent: number;
+  message: string;
+}
