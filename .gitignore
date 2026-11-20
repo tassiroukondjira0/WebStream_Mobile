@@ -1,0 +1,11 @@
+node_modules/
+android/
+ios/
+dist/
+.apk
+*.apk
+.env
+.env.local
+*.log
+prebuild*.log
+prebuild*.bat

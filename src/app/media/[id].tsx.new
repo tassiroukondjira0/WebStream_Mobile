@@ -1,0 +1,414 @@
+import React, { useEffect, useState } from 'react';
+import {
+  Alert,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
+import { ArrowLeft, Bookmark, Check, Play } from 'lucide-react-native';
+import { MediaItem } from '@/types/media';
+import { Api, toMediaSlug } from '@/services/api';
+import { cleanTitle } from '@/services/media.utils';
+import { useAuth } from '@/context/AuthContext';
+import { colors } from '@/theme/theme';
+
+const { width } = Dimensions.get('window');
+
+/** Construit le chemin web pour un média (utilisé par le lecteur dédié). */
+function getMediaWebPath(media: MediaItem): string {
+  const provider = (media.provider || 'FSTREAMTV').toUpperCase();
+  const id = media.externalId || media.id;
+  const isSeries = media.type === 'SERIES';
+  const isAnime = media.type === 'ANIME';
+
+  if (isAnime) {
+    const p = provider === 'FRENCHSTREAM' ? 'partner' : provider.toLowerCase();
+    return `/animes/${p}/${id}`;
+  }
+  if (provider === 'TMDB') {
+    return isSeries ? `/series/tmdb/${id}` : `/films/tmdb/${id}`;
+  }
+  if (provider === 'PARTNER' || provider === 'FRENCHSTREAM') {
+    return isSeries ? `/series/partner/${id}` : `/films/partner/${id}`;
+  }
+  if (provider === 'FSTREAMTV') {
+    return isSeries ? `/series/fstreamtv/${id}` : `/films/fstreamtv/${id}`;
+  }
+  // Fallback : essayer de deviner le provider depuis le slug
+  if (media.slug) {
+    const slugParts = media.slug.split('-');
+    if (slugParts.length >= 3) {
+      const segment = slugParts[0].toLowerCase();
+      const kind = slugParts[1].toLowerCase();
+      const externalId = slugParts.slice(2).join('-');
+      const isSeriesFromSlug = kind === 'series';
+      const isAnimeFromSlug = kind === 'anime';
+      if (isAnimeFromSlug) {
+        return `/animes/${segment}/${externalId}`;
+      }
+      return isSeriesFromSlug ? `/series/${segment}/${externalId}` : `/films/${segment}/${externalId}`;
+    }
+  }
+  return isSeries ? `/series/fstreamtv/${id}` : `/films/fstreamtv/${id}`;
+}
+
+export default function MediaDetailScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ id: string; mediaData?: string }>();
+
+  let media: MediaItem | null = null;
+  if (params.mediaData) {
+    try {
+      media = JSON.parse(params.mediaData);
+    } catch {
+      media = null;
+    }
+  }
+
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const bookmarkSlug = media ? toMediaSlug(media) : '';
+
+  // Synopsis enrichi depuis l'API playback
+  const [synopsis, setSynopsis] = useState<string | null>(media?.synopsis ?? null);
+  const [enrichedTitle, setEnrichedTitle] = useState<string | null>(null);
+  const [enrichedYear, setEnrichedYear] = useState<number | null>(null);
+  const [enrichedEpisodes, setEnrichedEpisodes] = useState<number | null>(null);
+
+  // ─── Bookmarks ───
+  useEffect(() => {
+    if (!isAuthenticated || !bookmarkSlug) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const { bookmarks } = await Api.getBookmarks();
+        if (!cancelled) {
+          setIsBookmarked(bookmarks.some((item) => item.slug === bookmarkSlug));
+        }
+      } catch {
+        // Silencieux
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, bookmarkSlug]);
+
+  // ─── Charge les métadonnées enrichies depuis l'API playback ───
+  useEffect(() => {
+    if (!media) return;
+
+    const provider = (media.provider || 'FSTREAMTV').toUpperCase();
+    const tmdbId = provider === 'TMDB' ? media.externalId || media.id : null;
+    if (!tmdbId) return;
+
+    const type = media.type === 'SERIES' || media.type === 'ANIME' ? 'tv' : 'movie';
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await Api.getMediaPlayback({
+          tmdbId,
+          type,
+          title: cleanTitle(media.title),
+          year: media.releaseYear ?? null,
+        });
+        if (!cancelled) {
+          if (data.title) setEnrichedTitle(data.title);
+          if (data.year) setEnrichedYear(data.year);
+          if (data.totalEpisodes) setEnrichedEpisodes(data.totalEpisodes);
+          if (data.overview) setSynopsis(data.overview);
+        }
+      } catch {
+        // Silencieux : on utilise les données de base
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [media]);
+
+  // ─── Actions ───
+  const handleToggleBookmark = async () => {
+    if (!media) return;
+
+    if (!isAuthenticated) {
+      Alert.alert('Connexion requise', 'Connectez-vous pour ajouter ce titre à vos favoris.', [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Connexion', onPress: () => router.push('/profile') },
+      ]);
+      return;
+    }
+
+    if (bookmarkLoading) return;
+
+    try {
+      setBookmarkLoading(true);
+      const result = await Api.toggleBookmark(bookmarkSlug);
+      setIsBookmarked(result.isBookmarked ?? !isBookmarked);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      Alert.alert('Erreur', 'Impossible de mettre à jour les favoris : ' + message);
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
+
+  const handlePlay = () => {
+    if (!media) return;
+
+    const provider = (media.provider || 'FSTREAMTV').toUpperCase();
+    const webPath = getMediaWebPath(media);
+    const isSeries = media.type === 'SERIES';
+    const isAnime = media.type === 'ANIME';
+
+    router.push({
+      pathname: '/player',
+      params: {
+        id: media.id,
+        title: media.title,
+        tmdbId: media.externalId || media.id,
+        externalId: media.externalId || media.id,
+        type: isSeries ? 'series' : isAnime ? 'anime' : 'movie',
+        provider,
+        webPath,
+      },
+    });
+  };
+
+  if (!media) {
+    return (
+      <SafeAreaView style={styles.centerContainer}>
+        <Text style={styles.errorText}>Média introuvable.</Text>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Text style={styles.backBtnText}>Retour</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
+  const posterUri =
+    media.posterUrl ||
+    media.backdropUrl ||
+    'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800';
+
+  const displayTitle = enrichedTitle ?? cleanTitle(media.title);
+  const displayYear = enrichedYear ?? media.releaseYear;
+  const displayTotalEpisodes = enrichedEpisodes ?? media.totalEpisodes;
+  const displayOverview = synopsis ?? media.synopsis;
+
+  return (
+    <View style={styles.container}>
+      {/* Background Backdrop Image */}
+      <View style={styles.backdropContainer}>
+        <Image source={{ uri: posterUri }} style={styles.backdrop} contentFit="cover" />
+        <View style={styles.gradientOverlay} />
+      </View>
+
+      {/* Top Floating Header */}
+      <SafeAreaView edges={['top']} style={styles.header}>
+        <TouchableOpacity
+          style={styles.circleBtn}
+          onPress={() => router.back()}
+          activeOpacity={0.8}>
+          <ArrowLeft color="#ffffff" size={20} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.circleBtn}
+          onPress={handleToggleBookmark}
+          disabled={bookmarkLoading}
+          activeOpacity={0.8}>
+          {isBookmarked ? (
+            <Check color="#22c55e" size={20} />
+          ) : (
+            <Bookmark color="#ffffff" size={20} />
+          )}
+        </TouchableOpacity>
+      </SafeAreaView>
+
+      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.spacer} />
+
+        <View style={styles.detailsBody}>
+          {/* Badge & Title */}
+          <View style={styles.metaRow}>
+            <View style={styles.typeBadge}>
+              <Text style={styles.typeBadgeText}>
+                {media.type === 'SERIES' ? 'SÉRIE' : media.type === 'ANIME' ? 'ANIMÉ' : 'FILM'}
+              </Text>
+            </View>
+            {displayYear ? (
+              <Text style={styles.yearText}>{displayYear}</Text>
+            ) : null}
+            {displayTotalEpisodes ? (
+              <Text style={styles.episodesText}>{displayTotalEpisodes} épisodes</Text>
+            ) : null}
+          </View>
+
+          <Text style={styles.title}>{displayTitle}</Text>
+
+          {/* Bouton Regarder */}
+          <TouchableOpacity
+            style={styles.playBtn}
+            onPress={handlePlay}
+            activeOpacity={0.8}>
+            <Play fill="#ffffff" color="#ffffff" size={20} />
+            <Text style={styles.playBtnText}>Regarder maintenant</Text>
+          </TouchableOpacity>
+
+          {/* Synopsis */}
+          {displayOverview ? (
+            <View style={styles.synopsisSection}>
+              <Text style={styles.synopsisTitle}>Synopsis</Text>
+              <Text style={styles.synopsisText}>{displayOverview}</Text>
+            </View>
+          ) : null}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  backdropContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: width * 0.75,
+    zIndex: -1,
+  },
+  backdrop: {
+    width: '100%',
+    height: '100%',
+  },
+  gradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  circleBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollContent: {
+    flex: 1,
+  },
+  spacer: {
+    height: 60,
+  },
+  detailsBody: {
+    padding: 20,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  typeBadge: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  typeBadgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  yearText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+  },
+  episodesText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+  },
+  title: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 20,
+    lineHeight: 30,
+  },
+  playBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    gap: 8,
+    marginBottom: 24,
+  },
+  playBtnText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  synopsisSection: {
+    marginBottom: 20,
+  },
+  synopsisTitle: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  synopsisText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: '#ffffff',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  backBtn: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  backBtnText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+});

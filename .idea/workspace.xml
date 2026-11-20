@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AgentAttachedProjects">{
+  &quot;attachedProjects&quot;: [
+    {
+      &quot;path&quot;: &quot;C:/Users/USER/Downloads/Web_Stream&quot;,
+      &quot;projectDirectory&quot;: &quot;C:/Users/USER/Downloads/Web_Stream&quot;
+    }
+  ]
+}</component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f93001ee-376e-45ef-8a66-b08da0dba8d9" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/eas.json" beforeDir="false" afterPath="$PROJECT_DIR$/eas.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/build-and-publish.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/build-and-publish.ps1" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/(tabs)/profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(tabs)/profile.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/download.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/download.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/media/[id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/media/[id].tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/context/NotificationContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/context/NotificationContext.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/notification.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/notification.service.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/Users/USER/Downloads/Web_Stream_Mobile" value="3M1MswP4MpHUgIft27ExiOQhX3X" />
+    </persistenceIdMap>
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="2187" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0000000000000537" />
+      <entry key="MS500" value="1.0022667457284966" />
+      <entry key="S2" value="1.3379188512136393" />
+      <entry key="S5" value="2.550083235671514" />
+      <entry key="S10" value="4.6571873498436265" />
+      <entry key="S30" value="9.866311984645524" />
+      <entry key="S60" value="12.749447274575244" />
+      <entry key="M2" value="14.663905776119778" />
+      <entry key="M5" value="16.008694935045003" />
+      <entry key="M10" value="16.494288935483322" />
+      <entry key="M15" value="16.66064618658409" />
+      <entry key="M30" value="16.85988892359738" />
+      <entry key="H1" value="17.57140866634411" />
+      <entry key="H2" value="20.151018309599554" />
+      <entry key="H4" value="29.82844135410054" />
+      <entry key="D1" value="532.7052202955142" />
+      <entry key="W1" value="2286.923180276659" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="5.175636674083479E-239" />
+      <entry key="M15" value="1.3888089962213712E-159" />
+      <entry key="M30" value="3.726672773696862E-80" />
+      <entry key="H1" value="1.930459213165793E-40" />
+      <entry key="H2" value="1.3894096635498595E-20" />
+      <entry key="H4" value="1.1787322272466622E-10" />
+      <entry key="D1" value="0.022142969385259136" />
+      <entry key="W1" value="0.5802366042274182" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.7900413118634171" />
+      <entry key="MS500" value="0.9560958219951977" />
+      <entry key="S2" value="1.3217496509886941" />
+      <entry key="S5" value="2.53819695018325" />
+      <entry key="S10" value="4.646439997645042" />
+      <entry key="S30" value="9.857669381915041" />
+      <entry key="S60" value="12.743491002957734" />
+      <entry key="M2" value="14.660353489620341" />
+      <entry key="M5" value="16.007107752627086" />
+      <entry key="M10" value="16.493464872842406" />
+      <entry key="M15" value="16.66008981880626" />
+      <entry key="M30" value="16.8596069143899" />
+      <entry key="H1" value="17.57126396295873" />
+      <entry key="H2" value="20.150938942954163" />
+      <entry key="H4" value="29.82835491864269" />
+      <entry key="D1" value="532.7267123883141" />
+      <entry key="W1" value="2287.503109049903" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3LT92ANm50OjgOSSnCjmx1yR8Bb" />
+  <component name="ProjectSessionTemplates">
+    <option name="panelTemplate">
+      <template>
+        <option name="ensembleEnabled" value="false" />
+        <option name="modeId" value="Agent" />
+        <option name="model">
+          <model>
+            <option name="modelType" value="builtin_id" />
+            <option name="modelValue" value="auto" />
+          </model>
+        </option>
+        <option name="targetType" value="BACKGROUND" />
+        <option name="worktreeMode" value="WORKSPACE" />
+      </template>
+    </option>
+    <option name="version" value="1" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;copilot.chat.legacySessionMetadata.migrated&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/USER/Downloads/Web_Stream_Mobile&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;python.packages.toolwindow.project.migrated.to.right.top.v2&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\USER\\Downloads\\Web_Stream_Mobile\\node_modules\\typescript\\lib&quot;
+  }
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-56aff7b04f6f-JavaScript-WS-263.7307.202" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f93001ee-376e-45ef-8a66-b08da0dba8d9" name="Changes" comment="" />
+      <created>1793467004348</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1793467004348</updated>
+      <workItem from="1793467020835" duration="8226000" />
+      <workItem from="1793478305931" duration="16892000" />
+      <workItem from="1793522570780" duration="33942000" />
+      <workItem from="1793570284755" duration="486000" />
+      <workItem from="1793571063847" duration="32911000" />
+      <workItem from="1793667141295" duration="21890000" />
+      <workItem from="1793743078196" duration="42867000" />
+      <workItem from="1793887675789" duration="499000" />
+      <workItem from="1794388853754" duration="5431000" />
+      <workItem from="1794409949356" duration="25647000" />
+      <workItem from="1794509890348" duration="11250000" />
+      <workItem from="1794593356249" duration="4492000" />
+      <workItem from="1795115190928" duration="25223000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.ps1" />
+  </component>
+</project>
