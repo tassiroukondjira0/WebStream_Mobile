@@ -71,26 +71,58 @@ Write-Host ""
 # Etape 2 : Build Gradle
 Write-Host "[2/6] Build Gradle en cours..."
 if (-not (Test-Path $GradlewPath)) {
-    Write-Error "gradlew.bat non trouve : $GradlewPath"
-    Write-Host "Assurez-vous d'etre dans le dossier Web_Stream_Mobile."
-    exit 1
+    Write-Host "  gradlew.bat non trouve - regeneration de la configuration Android..."
+    $MobileRoot = Join-Path $PSScriptRoot '..'
+    Push-Location $MobileRoot
+    npx expo prebuild --platform android 2>&1 | Out-Null
+    Pop-Location
 }
 
 $AndroidDir = Join-Path $PSScriptRoot '..\android'
+
+# Reappliquer la configuration de signature et Hermes apres prebuild
+$gradleProps = Join-Path $PSScriptRoot '..\android\gradle.properties'
+$props = Get-Content $gradleProps -Raw
+
+# Desactiver Hermes pour eviter les erreurs .hbc sur Windows
+if ($props -match 'hermesEnabled=true') {
+    $props = $props -replace 'hermesEnabled=true', 'hermesEnabled=false'
+}
+
+# Ajouter android.aapt2FromSdk pour eviter les plantages AAPT2
+if ($props -notmatch 'android\.aapt2FromSdk') {
+    $props += "`nandroid.aapt2FromSdk=true"
+}
+
+# Ajouter la configuration de signature si absente
+if ($props -notmatch 'myUploadStoreFile') {
+    $props += "`n`n# Signing configuration for release builds"
+    $props += "`nmyUploadStoreFile=../../cinemax.keystore"
+    $props += "`nmyUploadStorePassword=cinemax2024"
+    $props += "`nmyUploadKeyAlias=cinemax"
+    $props += "`nmyUploadKeyPassword=cinemax2024"
+}
+Set-Content $gradleProps $props -NoNewline
+
+# Reappliquer la config de signature dans build.gradle si prebuild l'a reset
+$buildGradle = Join-Path $PSScriptRoot '..\android\app\build.gradle'
+$bg = Get-Content $buildGradle -Raw
+if ($bg -match 'signingConfig signingConfigs\.debug\s+def enableShrinkResources') {
+    # Le release utilise encore debug signing - le remplacer
+    $bg = $bg -replace
+        "(signingConfigs \{[\s\S]*?debug \{[\s\S]*?\})\s*\}",
+        "`$1`n        release {`n            storeFile file(findProperty('myUploadStoreFile') ?: '../../cinemax.keystore')`n            storePassword findProperty('myUploadStorePassword') ?: ''`n            keyAlias findProperty('myUploadKeyAlias') ?: 'cinemax'`n            keyPassword findProperty('myUploadKeyPassword') ?: ''`n        }`n    }"
+    $bg = $bg -replace
+        'release \{\s*// Caution! In production.*?signingConfig signingConfigs\.debug',
+        'release {`n            signingConfig signingConfigs.release'
+    Set-Content $buildGradle $bg -NoNewline
+}
 
 # Arreter les daemons Gradle pour eviter les conflits
 Write-Host "  Arret des daemons Gradle..."
 Push-Location $AndroidDir
 & .\gradlew.bat --stop | Out-Null
 Pop-Location
-
-# Desactiver Hermes pour eviter les erreurs .hbc sur Windows
-$gradleProps = Join-Path $PSScriptRoot '..\android\gradle.properties'
-$props = Get-Content $gradleProps -Raw
-if ($props -notmatch 'hermesEnabled=false') {
-    $props = $props -replace 'hermesEnabled=true', 'hermesEnabled=false'
-    Set-Content $gradleProps $props -NoNewline
-}
 
 # Nettoyer les caches CMake pour eviter les erreurs de chemin
 $cmakeCache = Join-Path $PSScriptRoot '..\android\app\.cxx'

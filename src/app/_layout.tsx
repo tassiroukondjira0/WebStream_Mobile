@@ -22,7 +22,7 @@ export default function RootLayout() {
     let cancelled = false;
     const wakeUp = async () => {
       try {
-        const woke = await Api.wakeServer(5);
+        const woke = await Api.wakeServer(3);
         if (!cancelled) {
           setIsWakingServer(false);
           SplashScreen.hideAsync().catch(() => {});
@@ -39,9 +39,19 @@ export default function RootLayout() {
       }
     };
 
+    // Timeout de sécurité : ne jamais bloquer le splash plus de 15s
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        cancelled = true;
+        setIsWakingServer(false);
+        SplashScreen.hideAsync().catch(() => {});
+      }
+    }, 15000);
+
     wakeUp();
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
     };
   }, []);
 
@@ -66,11 +76,26 @@ export default function RootLayout() {
     const checkForNewBuild = async () => {
       try {
         const lastKnownDate = await AsyncStorage.getItem(LAST_BUILD_DATE_KEY);
-        const result = await Api.checkLatestBuild();
+
+        // Timeout de 5s pour ne pas bloquer si le serveur ne répond pas
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        let result: { hasNewBuild: boolean; latestBuild: { type: 'eas' | 'local'; buildDate: string; downloadUrl: string; size?: number } | null } | null = null;
+        try {
+          result = await Promise.race([
+            Api.checkLatestBuild(),
+            new Promise<null>((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
+          ]);
+        } catch {
+          // Timeout ou erreur réseau — ignorer silencieusement
+        } finally {
+          clearTimeout(timeoutId);
+        }
 
         if (cancelled) return;
 
-        if (result.hasNewBuild && result.latestBuild) {
+        if (result?.hasNewBuild && result?.latestBuild) {
           // Si c'est la première fois ou si la date a changé → nouveau build
           if (lastKnownDate !== result.latestBuild.buildDate) {
             Alert.alert(
@@ -90,13 +115,11 @@ export default function RootLayout() {
                 },
               ]
             );
-          } else {
-            // L'utilisateur a déjà vu cette notification
           }
         }
 
         // Si c'est la première ouverture et qu'aucun build n'est connu, stocker la date
-        if (!lastKnownDate && result.hasNewBuild && result.latestBuild) {
+        if (!lastKnownDate && result?.hasNewBuild && result?.latestBuild) {
           await AsyncStorage.setItem(LAST_BUILD_DATE_KEY, result.latestBuild.buildDate);
         }
       } catch (e) {
