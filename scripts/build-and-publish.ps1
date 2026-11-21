@@ -17,30 +17,6 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# Verification : Node.js doit fonctionner pour expo prebuild et bump-version
-Write-Host "Verification de Node.js..."
-$nodeTest = Start-Process -FilePath "node" -ArgumentList "-e", "process.stdout.write('ok')" -NoNewWindow -Wait -PassThru -RedirectStandardOutput "$env:TEMP\node-test-output.txt"
-$nodeOutput = Get-Content "$env:TEMP\node-test-output.txt" -ErrorAction SilentlyContinue
-if ($nodeTest.ExitCode -ne 0 -or -not $nodeOutput -or $nodeOutput.Trim() -ne 'ok') {
-    Write-Host ""
-    Write-Host "========================================" -ForegroundColor Red
-    Write-Host "  ERREUR : Node.js ne fonctionne pas !" -ForegroundColor Red
-    Write-Host "========================================" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "Le build ne peut pas demarrer sans Node.js fonctionnel."
-    Write-Host ""
-    Write-Host "Pour reparer Node.js :"
-    Write-Host "  1. Desinstallez Node.js : Parametres > Applications > Node.js > Desinstaller"
-    Write-Host "  2. Telechargez la derniere version LTS sur https://nodejs.org/"
-    Write-Host "  3. Installez Node.js et redemarrez votre terminal"
-    Write-Host "  4. Verifiez : node -v  (devrait afficher une version comme v20.x.x)"
-    Write-Host ""
-    exit 1
-}
-Remove-Item "$env:TEMP\node-test-output.txt" -ErrorAction SilentlyContinue
-Write-Host "Node.js OK."
-Write-Host ""
-
 # Chemins
 $GradlewPath = Join-Path $PSScriptRoot '..\android\gradlew.bat'
 $ApkSource = Join-Path $PSScriptRoot '..\android\app\build\outputs\apk\release\app-release.apk'
@@ -85,9 +61,9 @@ Write-Host ""
 
 # Etape 1 : Incrementer la version
 Write-Host "[1/6] Incrementation de la version..."
-$bumpProcess = Start-Process -FilePath "node" -ArgumentList "./scripts/bump-version.js" -NoNewWindow -Wait -PassThru
-if ($bumpProcess.ExitCode -ne 0) {
-    Write-Error "L'incrementation de la version a echoue (code $($bumpProcess.ExitCode))."
+node ./scripts/bump-version.js
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "L'incrementation de la version a echoue."
     exit 1
 }
 Write-Host ""
@@ -95,110 +71,42 @@ Write-Host ""
 # Etape 2 : Build Gradle
 Write-Host "[2/6] Build Gradle en cours..."
 if (-not (Test-Path $GradlewPath)) {
-    Write-Warning "gradlew.bat non trouve - regeneration de la configuration Android..."
-    $prebuildLog = Join-Path $env:TEMP "expo-prebuild.log"
-    $prebuildProcess = Start-Process -FilePath "node" -ArgumentList "./node_modules/expo/bin/cli.js", "prebuild", "--clean", "--platform", "android" -NoNewWindow -Wait -PassThru -RedirectStandardOutput $prebuildLog -RedirectStandardError $prebuildLog
-    if ($prebuildProcess.ExitCode -ne 0) {
-        Write-Error "La regeneration de la configuration Android a echoue (code $($prebuildProcess.ExitCode))."
-        Write-Host "Logs disponibles dans : $prebuildLog"
-        if (Test-Path $prebuildLog) {
-            Write-Host "--- Debut des logs ---"
-            Get-Content $prebuildLog | Select-Object -Last 50
-            Write-Host "--- Fin des logs ---"
-        }
-        exit 1
-    }
-    if (-not (Test-Path $GradlewPath)) {
-        Write-Error "gradlew.bat toujours non trouve apres prebuild. Le dossier android/ n'a pas ete genere."
-        Write-Host "Logs disponibles dans : $prebuildLog"
-        if (Test-Path $prebuildLog) {
-            Write-Host "--- Debut des logs ---"
-            Get-Content $prebuildLog | Select-Object -Last 50
-            Write-Host "--- Fin des logs ---"
-        }
-        exit 1
-    }
+    Write-Error "gradlew.bat non trouve : $GradlewPath"
+    Write-Host "Assurez-vous d'etre dans le dossier Web_Stream_Mobile."
+    exit 1
 }
 
 $AndroidDir = Join-Path $PSScriptRoot '..\android'
-$GradlePropsPath = Join-Path $AndroidDir 'gradle.properties'
 
-# Desactiver Hermes pour eviter l'erreur de compilation .hbc sur Windows
-if (Test-Path $GradlePropsPath) {
-    $gradleProps = Get-Content $GradlePropsPath -Raw
-    if ($gradleProps -match 'hermesEnabled=true') {
-        $gradleProps = $gradleProps -replace 'hermesEnabled=true', 'hermesEnabled=false'
-        Set-Content -Path $GradlePropsPath -Value $gradleProps -NoNewline
-        Write-Host "  Hermes desactive (utilisation de JSC a la place)."
-    }
-}
-
-# Arreter les daemons Gradle existants pour eviter les conflits
+# Arreter les daemons Gradle pour eviter les conflits
 Write-Host "  Arret des daemons Gradle..."
 Push-Location $AndroidDir
-try {
-    $stopProcess = Start-Process -FilePath ".\gradlew.bat" -ArgumentList "--stop" -NoNewWindow -Wait -PassThru
-} catch {}
+& .\gradlew.bat --stop | Out-Null
 Pop-Location
-Start-Sleep -Seconds 2
 
-# Nettoyer les caches CMake pour eviter les erreurs de chemin trop long
-Write-Host "  Nettoyage des caches CMake..."
-$cmakeCaches = @(
-    Join-Path $PSScriptRoot '..\node_modules\expo-modules-core\android\.cxx'
-    Join-Path $PSScriptRoot '..\node_modules\react-native-worklets\android\.cxx'
-    Join-Path $PSScriptRoot '..\node_modules\react-native-reanimated\android\.cxx'
-)
-foreach ($cache in $cmakeCaches) {
-    if (Test-Path $cache) {
-        Remove-Item -Recurse -Force $cache -ErrorAction SilentlyContinue
-        Write-Host "    Cache CMake nettoye : $cache"
-    }
+# Desactiver Hermes pour eviter les erreurs .hbc sur Windows
+$gradleProps = Join-Path $PSScriptRoot '..\android\gradle.properties'
+$props = Get-Content $gradleProps -Raw
+if ($props -notmatch 'hermesEnabled=false') {
+    $props = $props -replace 'hermesEnabled=true', 'hermesEnabled=false'
+    Set-Content $gradleProps $props -NoNewline
 }
 
-# Desactiver AAPT2 daemon pour eviter le crash sur Windows
-if (Test-Path $GradlePropsPath) {
-    $gradleProps = Get-Content $GradlePropsPath -Raw
-    if ($gradleProps -notmatch 'android. aaptOptions. noCompress') {
-        # Ajouter la desactivation du daemon AAPT2
-        $gradleProps = $gradleProps -replace '(?m)^org\.gradle\.daemon=true$', 'org.gradle.daemon=false'
-        Set-Content -Path $GradlePropsPath -Value $gradleProps -NoNewline
-        Write-Host "  Daemon Gradle desactive pour ce build."
-    }
+# Nettoyer les caches CMake pour eviter les erreurs de chemin
+$cmakeCache = Join-Path $PSScriptRoot '..\android\app\.cxx'
+if (Test-Path $cmakeCache) {
+    Remove-Item -Recurse -Force $cmakeCache -ErrorAction SilentlyContinue
 }
 
-# Executer le build Gradle avec capture de logs
-$buildLog = Join-Path $env:TEMP "gradle-build.log"
-Write-Host "  Execution de Gradle (logs : $buildLog)"
 Push-Location $AndroidDir
 try {
-    $gradleProcess = Start-Process -FilePath ".\gradlew.bat" -ArgumentList "assembleRelease", "--no-daemon" -NoNewWindow -Wait -PassThru -RedirectStandardOutput $buildLog -RedirectStandardError $buildLog
-    if ($gradleProcess.ExitCode -ne 0) {
-        Write-Error "Le build Gradle a echoue (code $($gradleProcess.ExitCode))."
-        Write-Host ""
-        Write-Host "--- Dernieres lignes des logs ---" -ForegroundColor Yellow
-        Get-Content $buildLog | Select-String -Pattern "FAILURE|Error:|caused by|Exception" -Context 2,2 | Select-Object -Last 20
-        Write-Host "--- Fin des logs ---" -ForegroundColor Yellow
-        Write-Host ""
-        Write-Host "Logs complets : $buildLog"
-        Pop-Location
-        exit 1
-    }
+    & .\gradlew.bat assembleRelease --no-daemon
 } catch {
-    Write-Error "Le build Gradle a echoue : $($_.Exception.Message)"
+    Write-Error "Le build Gradle a echoue."
     Pop-Location
     exit 1
 }
 Pop-Location
-
-# Restaurer le daemon Gradle pour les futurs builds
-if (Test-Path $GradlePropsPath) {
-    $gradleProps = Get-Content $GradlePropsPath -Raw
-    if ($gradleProps -match 'org\.gradle\.daemon=false') {
-        $gradleProps = $gradleProps -replace 'org\.gradle\.daemon=false', 'org.gradle.daemon=true'
-        Set-Content -Path $GradlePropsPath -Value $gradleProps -NoNewline
-    }
-}
 
 if (-not (Test-Path $ApkSource)) {
     Write-Error "APK non trouve apres le build : $ApkSource"
@@ -210,13 +118,8 @@ Write-Host ""
 # Etape 3 : Copier et renommer l'APK avec la version
 Write-Host "[3/6] Copie de l'APK..."
 
-# Lire la version pour le nom de fichier (lecture directe depuis app.json, sans Node.js)
-$appJson = Get-Content (Join-Path $PSScriptRoot '..\app.json') -Raw | ConvertFrom-Json
-$version = $appJson.expo.version
-if (-not $version) {
-    Write-Error "Version non trouvee dans app.json."
-    exit 1
-}
+# Lire la version pour le nom de fichier
+$version = node -p "require('./app.json').expo.version"
 $ApkDest = Join-Path $ApkDestDir "cinemax-${version}.apk"
 
 Copy-Item -Path $ApkSource -Destination $ApkDest -Force
@@ -230,8 +133,9 @@ Write-Host "[4/6] Commit de la nouvelle version dans Web_Stream_Mobile..."
 $MobileRoot = Join-Path $PSScriptRoot '..'
 Push-Location $MobileRoot
 try {
-    git add app.json package.json
-    git commit -m "Bump version to $version"
+    $versionInfo = node -p "require('./app.json').expo.version"
+    git add app.json package.json android/app/build.gradle
+    git commit -m "Bump version to $versionInfo"
     git push
 } catch {
     Write-Warning "Le commit de la version a echoue - vous pouvez le faire manuellement."

@@ -13,14 +13,60 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f93001ee-376e-45ef-8a66-b08da0dba8d9" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/eas.json" beforeDir="false" afterPath="$PROJECT_DIR$/eas.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/app.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plugins/withCmakeObjectPathMax.js" beforeDir="false" afterPath="$PROJECT_DIR$/plugins/withCmakeObjectPathMax.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/build-and-publish.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/build-and-publish.ps1" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/bump-version.js" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/bump-version.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/copy-apk.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/copy-apk.ps1" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/reset-project.js" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/reset-project.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/(tabs)/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(tabs)/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/(tabs)/animes.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(tabs)/animes.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/(tabs)/films.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(tabs)/films.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/(tabs)/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(tabs)/index.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/(tabs)/profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(tabs)/profile.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/(tabs)/series.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(tabs)/series.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/dashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/dashboard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/medias.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/medias.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/notifications.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/notifications.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/provider-assets.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/provider-assets.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/reviews.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/reviews.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/sync.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/sync.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/users.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/users.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/change-password.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/change-password.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/download.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/download.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/explore.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/explore.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/favorites.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/favorites.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/forgot-password.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/forgot-password.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/login.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/login.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/media/[id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/media/[id].tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/media/[id].tsx.new" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/media/[id].tsx.new" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/notifications.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/notifications.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/player.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/player.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/premium.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/premium.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/profile/info.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/profile/info.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/reset-password.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/reset-password.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/verify-email.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/verify-email.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/wishlist.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/wishlist.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/FeaturedRotation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/FeaturedRotation.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/GenreChips.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/GenreChips.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/HeroSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/HeroSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/MediaCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/MediaCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/MediaRow.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/MediaRow.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/PlatformSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/PlatformSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/context/AuthContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/context/AuthContext.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/context/NotificationContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/context/NotificationContext.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/auth.utils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/auth.utils.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/media.cache.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/media.cache.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/media.utils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/media.utils.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/services/notification.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/notification.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/theme/theme.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/theme/theme.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/types/media.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/media.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,23 +90,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0000000000000537" />
-      <entry key="MS500" value="1.0022667457284966" />
-      <entry key="S2" value="1.3379188512136393" />
-      <entry key="S5" value="2.550083235671514" />
-      <entry key="S10" value="4.6571873498436265" />
-      <entry key="S30" value="9.866311984645524" />
-      <entry key="S60" value="12.749447274575244" />
-      <entry key="M2" value="14.663905776119778" />
-      <entry key="M5" value="16.008694935045003" />
-      <entry key="M10" value="16.494288935483322" />
-      <entry key="M15" value="16.66064618658409" />
-      <entry key="M30" value="16.85988892359738" />
-      <entry key="H1" value="17.57140866634411" />
-      <entry key="H2" value="20.151018309599554" />
-      <entry key="H4" value="29.82844135410054" />
-      <entry key="D1" value="532.7052202955142" />
-      <entry key="W1" value="2286.923180276659" />
+      <entry key="MS100" value="1.000008886212085" />
+      <entry key="MS500" value="1.0997599677273011" />
+      <entry key="S2" value="1.9506273766496272" />
+      <entry key="S5" value="3.7813017119085246" />
+      <entry key="S10" value="6.166352074165484" />
+      <entry key="S30" value="9.818322562434359" />
+      <entry key="S60" value="11.251532763031326" />
+      <entry key="M2" value="12.093744123328243" />
+      <entry key="M5" value="13.551145390104963" />
+      <entry key="M10" value="16.783547431267746" />
+      <entry key="M15" value="19.323805244178118" />
+      <entry key="M30" value="23.427526427922917" />
+      <entry key="H1" value="26.829097183283523" />
+      <entry key="H2" value="30.881510930495843" />
+      <entry key="H4" value="41.10315377498149" />
+      <entry key="D1" value="540.4653995577927" />
+      <entry key="W1" value="2296.696653369896" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -72,34 +118,37 @@
       <entry key="S60" value="0.0" />
       <entry key="M2" value="0.0" />
       <entry key="M5" value="0.0" />
-      <entry key="M10" value="5.175636674083479E-239" />
-      <entry key="M15" value="1.3888089962213712E-159" />
-      <entry key="M30" value="3.726672773696862E-80" />
-      <entry key="H1" value="1.930459213165793E-40" />
-      <entry key="H2" value="1.3894096635498595E-20" />
-      <entry key="H4" value="1.1787322272466622E-10" />
-      <entry key="D1" value="0.022142969385259136" />
-      <entry key="W1" value="0.5802366042274182" />
+      <entry key="M10" value="1.247194390833365E-239" />
+      <entry key="M15" value="5.37802437160184E-160" />
+      <entry key="M30" value="2.319056784902375E-80" />
+      <entry key="H1" value="1.5228449641714252E-40" />
+      <entry key="H2" value="1.2340360465445809E-20" />
+      <entry key="H4" value="1.1108717507185951E-10" />
+      <entry key="D1" value="0.021925221379670557" />
+      <entry key="W1" value="0.579418020604202" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.7900413118634171" />
-      <entry key="MS500" value="0.9560958219951977" />
-      <entry key="S2" value="1.3217496509886941" />
-      <entry key="S5" value="2.53819695018325" />
-      <entry key="S10" value="4.646439997645042" />
-      <entry key="S30" value="9.857669381915041" />
-      <entry key="S60" value="12.743491002957734" />
-      <entry key="M2" value="14.660353489620341" />
-      <entry key="M5" value="16.007107752627086" />
-      <entry key="M10" value="16.493464872842406" />
-      <entry key="M15" value="16.66008981880626" />
-      <entry key="M30" value="16.8596069143899" />
-      <entry key="H1" value="17.57126396295873" />
-      <entry key="H2" value="20.150938942954163" />
-      <entry key="H4" value="29.82835491864269" />
-      <entry key="D1" value="532.7267123883141" />
-      <entry key="W1" value="2287.503109049903" />
+      <entry key="MS100" value="0.8526423125363191" />
+      <entry key="MS500" value="1.0648564748066411" />
+      <entry key="S2" value="1.9338301000506133" />
+      <entry key="S5" value="3.7660707210011664" />
+      <entry key="S10" value="6.152059203425479" />
+      <entry key="S30" value="9.809602888600422" />
+      <entry key="S60" value="11.246333201225976" />
+      <entry key="M2" value="12.09089171042301" />
+      <entry key="M5" value="13.54984754390242" />
+      <entry key="M10" value="16.78273450107252" />
+      <entry key="M15" value="19.323177628762934" />
+      <entry key="M30" value="23.427143543707142" />
+      <entry key="H1" value="26.82887900748208" />
+      <entry key="H2" value="30.88138834339048" />
+      <entry key="H4" value="41.10304624709173" />
+      <entry key="D1" value="540.486675955493" />
+      <entry key="W1" value="2297.275763372637" />
     </decayedShown>
+  </component>
+  <component name="PackageJsonUpdateNotifier">
+    <dismissed value="$PROJECT_DIR$/package.json" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 0,
@@ -137,7 +186,7 @@
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
     &quot;copilot.chat.legacySessionMetadata.migrated&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/USER/Downloads/Web_Stream_Mobile&quot;,
@@ -152,6 +201,45 @@
     &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\USER\\Downloads\\Web_Stream_Mobile\\node_modules\\typescript\\lib&quot;
   }
 }</component>
+  <component name="RunManager">
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="Web_Stream_Mobile" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="RUN_TOOL" value="" />
+      <option name="RUN_AS_SCRIPT" value="" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="Tox" factoryName="Tox">
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="RUN_TOOL" value="" />
+      <option name="RUN_AS_SCRIPT" value="" />
+      <method v="2" />
+    </configuration>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -178,7 +266,9 @@
       <workItem from="1794409949356" duration="25647000" />
       <workItem from="1794509890348" duration="11250000" />
       <workItem from="1794593356249" duration="4492000" />
-      <workItem from="1795115190928" duration="25223000" />
+      <workItem from="1795115190928" duration="27252000" />
+      <workItem from="1795190532109" duration="16072000" />
+      <workItem from="1795215891250" duration="14520000" />
     </task>
     <servers />
   </component>

@@ -15,7 +15,7 @@
       }
     },
     "android": {
-      "package": "com.cinemax.app",
+      "package": "com.tassiroukondjira.cinemax",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#09090b",

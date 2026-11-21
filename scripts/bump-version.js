@@ -89,27 +89,23 @@ const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
 packageJson.version = newVersion;
 fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n', 'utf-8');
 
-// Mettre à jour android/app/build.gradle (seulement si le fichier existe)
-if (fs.existsSync(buildGradlePath)) {
-  console.log('✏️  Mise à jour de android/app/build.gradle...');
-  let buildGradle = fs.readFileSync(buildGradlePath, 'utf-8');
+// Mettre à jour android/app/build.gradle
+console.log('✏️  Mise à jour de android/app/build.gradle...');
+let buildGradle = fs.readFileSync(buildGradlePath, 'utf-8');
 
-  // Remplacer versionName
-  buildGradle = buildGradle.replace(
-    /versionName\s+"[^"]*"/,
-    `versionName "${newVersion}"`
-  );
+// Remplacer versionName
+buildGradle = buildGradle.replace(
+  /versionName\s+"[^"]*"/,
+  `versionName "${newVersion}"`
+);
 
-  // Remplacer versionCode
-  buildGradle = buildGradle.replace(
-    /versionCode\s+\d+/,
-    `versionCode ${newVersionCode}`
-  );
+// Remplacer versionCode
+buildGradle = buildGradle.replace(
+  /versionCode\s+\d+/,
+  `versionCode ${newVersionCode}`
+);
 
-  fs.writeFileSync(buildGradlePath, buildGradle, 'utf-8');
-} else {
-  console.log('⚠️  android/app/build.gradle non trouvé — il sera généré par expo prebuild.');
-}
+fs.writeFileSync(buildGradlePath, buildGradle, 'utf-8');
 
 console.log('');
 console.log('✅ Version incrémentée avec succès !');
