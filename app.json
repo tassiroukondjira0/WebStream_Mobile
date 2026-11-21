@@ -1,57 +1,65 @@
 {
   "expo": {
     "name": "CinéMax",
-    "slug": "cinemax",
-    "version": "1.1.7",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "slug": "cinemax-mobile",
+    "version": "1.1.8",
+    "orientation": "default",
+    "icon": "./assets/images/icon.png",
     "scheme": "cinemax",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.tassiroukondjira.cinemax"
+      "bundleIdentifier": "com.cinemax.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.cinemax.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#09090b"
-      },
-      "edgeToEdgeEnabled": true,
-      "package": "com.tassiroukondjira.cinemax",
-      "googleServicesFile": "./google-services.json"
+        "backgroundColor": "#09090b",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      }
     },
     "web": {
-      "bundler": "metro",
-      "output": "static"
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
-      "expo-splash-screen",
-      "expo-secure-store",
-      "expo-notifications",
-      "expo-video",
       [
-        "expo-build-properties",
+        "expo-splash-screen",
         {
-          "android": {
-            "enableProguardInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true
-          }
+          "backgroundColor": "#09090b",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 120
         }
       ],
-      "./plugins/withCmakeObjectPathMax.js"
+      "expo-video",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": null,
+          "color": "#09090b"
+        }
+      ],
+      "./plugins/withCmakeObjectPathMax"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
       "router": {
-        "origin": false
+        "asyncRoutes": {
+          "web": true
+        }
       },
       "eas": {
-        "projectId": "eas-project-id"
+        "projectId": "cfc488b3-4282-4448-90be-4ba96d59234c"
       }
-    }
+    },
+    "owner": "tassirou"
   }
 }
