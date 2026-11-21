@@ -2,7 +2,6 @@
   "expo": {
     "name": "CinéMax",
     "slug": "cinemax-mobile",
-    "version": "1.1.8",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "cinemax",
@@ -15,7 +14,6 @@
       }
     },
     "android": {
-      "package": "com.cinemax.app.v2",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#09090b",
